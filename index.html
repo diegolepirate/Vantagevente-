@@ -830,9 +830,9 @@ async function enterApp(){
 // ========================================
 // TABS
 // ========================================
-const TABS_VENDOR=['prospects','pipeline','projects','leaderboard','badges','notes','clients'];
-const TABS_ADMIN=['prospects','pipeline','projects','leaderboard','badges','notes','clients','vendors','logs','blacklist'];
-const TAB_LABELS={prospects:'Prospects',pipeline:'Pipeline',projects:'Projets',leaderboard:'Classement',badges:'Badges',notes:'Notes',clients:'Clients',vendors:'Vendeurs',logs:'Logs',blacklist:'Blacklist'};
+const TABS_VENDOR=['prospects','projects','leaderboard','badges','notes','clients'];
+const TABS_ADMIN=['prospects','projects','leaderboard','badges','notes','clients','vendors','logs','blacklist'];
+const TAB_LABELS={prospects:'Prospects',projects:'Projets',leaderboard:'Classement',badges:'Badges',notes:'Notes',clients:'Clients',vendors:'Vendeurs',logs:'Logs',blacklist:'Blacklist'};
 
 function buildTabs(){
   const tabs=isAdmin?TABS_ADMIN:TABS_VENDOR;
@@ -1036,7 +1036,7 @@ async function render(){
 
   switch(currentTab){
     case 'prospects': await renderProspects(content); break;
-    case 'pipeline': await renderPipeline(content); break;
+
     case 'projects': await renderProjects(content); break;
     case 'leaderboard': await renderLeaderboard(content); break;
     case 'badges': renderBadges(content); break;
