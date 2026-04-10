@@ -660,10 +660,11 @@ function regionBadgeHtml(region){
 }
 // Multi-select dropdown (Region + Famille)
 const _mselCallbacks={};
-function multiSelectHtml(id,options,selectedArr,onChangeFn,isRegion){
+function multiSelectHtml(id,options,selectedArr,onChangeFn,isRegion,placeholder){
   if(onChangeFn)_mselCallbacks[id]=onChangeFn;
   const count=selectedArr.length;
-  const label=count===0?(isRegion?'-- Régions --':'-- Familles --'):(count===1?selectedArr[0]:count+' sélectionnés');
+  const defLabel=placeholder||(isRegion?'-- Régions --':'-- Familles --');
+  const label=count===0?defLabel:(count===1?selectedArr[0]:count+' sélectionnés');
   let items='';
   if(isRegion){
     items=ALL_REGIONS.map(r=>{const t=REGION_COUNTS[r]||0;const b=getSizeBadge(t);const on=selectedArr.includes(r)?'on':'';return`<div class="msel-item ${on}" data-val="${escHtml(r)}"><div class="msel-check"></div><span class="rpk-icon">${b.icon}</span><span class="rpk-name">${escHtml(r)}</span><span class="rpk-badge" style="color:${b.color};background:${b.color}22;border:1px solid ${b.color}44">${b.label}</span><span class="rpk-count" style="color:${b.color}">${t.toLocaleString()}</span></div>`}).join('');
@@ -693,7 +694,7 @@ function toggleMultiSelect(id){
   document.body.appendChild(portal);
 }
 function toggleMultiItem(id,val){
-  const arr=id==='mselReg'?selectedRegions:selectedFamilles;
+  const arr=id==='mselReg'?selectedRegions:id==='mselTel'?selectedTels:selectedFamilles;
   const idx=arr.indexOf(val);
   if(idx>=0)arr.splice(idx,1);else arr.push(val);
   // Update portal checkboxes visually (don't close)
@@ -701,7 +702,7 @@ function toggleMultiItem(id,val){
   if(portal){
     portal.querySelectorAll('.msel-item').forEach(item=>{
       const v=item.dataset.val;
-      const isOn=(id==='mselReg'?selectedRegions:selectedFamilles).includes(v);
+      const isOn=(id==='mselReg'?selectedRegions:id==='mselTel'?selectedTels:selectedFamilles).includes(v);
       item.classList.toggle('on',isOn);
     });
   }
@@ -709,8 +710,8 @@ function toggleMultiItem(id,val){
   const count=arr.length;
   const el=document.getElementById('msel-'+id);
   if(el){
-    const isReg=id==='mselReg';
-    const label=count===0?(isReg?'-- Régions --':'-- Familles --'):(count===1?arr[0]:count+' sélectionnés');
+    const defLabel=id==='mselReg'?'-- Régions --':id==='mselTel'?'-- Type Tel --':'-- Familles --';
+    const label=count===0?defLabel:(count===1?arr[0]:count+' sélectionnés');
     el.querySelector('.msel-btn').innerHTML=label+(count?'<span class="msel-count">'+count+'</span>':'')+'<span class="rpk-arrow">▼</span>';
   }
 }
@@ -907,12 +908,12 @@ async function loadProspects(reset){
   if(searchVal) query=query.or(`nom.ilike.%${searchVal}%,numero.ilike.%${searchVal}%,adresse.ilike.%${searchVal}%`);
 
   // Dropdown filters (multi-select arrays)
-  const fTel=document.getElementById('fTel');
+
   if(pendingFamille){selectedFamilles=[pendingFamille];pendingFamille=''}
   if(pendingRegion){selectedRegions=[pendingRegion];pendingRegion=''}
   if(selectedFamilles.length) query=query.in('famille',selectedFamilles);
   if(selectedRegions.length) query=query.in('region',selectedRegions);
-  if(fTel&&fTel.value) query=query.eq('type_tel',fTel.value);
+  if(selectedTels.length) query=query.in('type_tel',selectedTels);
 
   // Sort
   query=query.order(sortCol,{ascending:sortDir==='asc'});
@@ -1101,10 +1102,10 @@ async function renderProspects(container){
       <button class="toggle-btn${ownerFilter==='assigned'?' active':''}" onclick="setOwnerFilter('assigned')">Assignes <span class="cnt-badge">${counts.assigned}</span></button>
       <button class="toggle-btn${ownerFilter==='mine'?' active':''}" onclick="setOwnerFilter('mine')">Les Miens <span class="cnt-badge">${counts.mine}</span></button>
     </div>
-    <input class="search" id="q" placeholder="Rechercher..." oninput="debounceSearch()" value="${escHtml(document.getElementById('q')?document.getElementById('q').value:'')}">
+    <div style="flex:1"></div>
     ${multiSelectHtml('mselFam',families,selectedFamilles,function(){reloadAndRender()},false)}
     ${multiSelectHtml('mselReg',ALL_REGIONS,selectedRegions,function(){reloadAndRender()},true)}
-    <select class="flt" id="fTel" onchange="reloadAndRender()"><option value="">Type Tel</option><option value="Fixe">Fixe</option><option value="Portable">Portable</option></select>
+    ${multiSelectHtml('mselTel',['Fixe','Portable'],selectedTels,function(){reloadAndRender()},false,'-- Type Tel --')}
     <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Reset</button>
     <span class="cnt">Affiche: <b>${DATA.length}</b> / ${TOTAL_COUNT}</span>
   </div>`;
@@ -1186,7 +1187,7 @@ function resetFilters(){
   statusFilter='';
   ownerFilter='all';
   pendingRegion='';pendingFamille='';
-  selectedRegions=[];selectedFamilles=[];
+  selectedRegions=[];selectedFamilles=[];selectedTels=[];
   sortCol='nom';
   sortDir='asc';
   reloadAndRender();
@@ -1687,7 +1688,7 @@ function loadObjectivesIntoEditModal(projectId){
 
 // Pending filter values survive render() cycles
 let pendingRegion='',pendingFamille='';
-let selectedRegions=[],selectedFamilles=[];
+let selectedRegions=[],selectedFamilles=[],selectedTels=[];
 
 async function goToProspectsFiltered(projectId){
   const p=PROJECTS.find(x=>x.id===projectId);
