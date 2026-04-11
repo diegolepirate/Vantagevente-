@@ -1019,14 +1019,14 @@ async function loadData(){
   // Load other data in parallel
   const[projRes,cliRes,remRes,blRes,chRes,scrRes]=await Promise.all([
     sb.from('projects').select('*').order('id'),
-    sb.from('clients').select('*').order('id'),
+    fetchAllClients(),
     sb.from('reminders').select('*').order('remind_at'),
     sb.from('blacklist').select('*').order('id'),
     sb.from('call_history').select('*').order('created_at',{ascending:false}).limit(500),
     sb.from('vendor_scripts').select('*').order('id')
   ]);
   PROJECTS=projRes.data||[];
-  CLIENTS=cliRes.data||[];
+  CLIENTS=cliRes||[];
   REMINDERS=remRes.data||[];
   BLACKLIST=blRes.data||[];
   CALL_HISTORY=chRes.data||[];
@@ -1089,6 +1089,19 @@ async function fetchStatusCounts(){
   const results=await Promise.all(promises);
   STATUSES.forEach((s,i)=>{STATUS_COUNTS[s]=results[i].count||0});
   STATUS_COUNTS.total=Object.values(STATUS_COUNTS).reduce((a,b)=>a+b,0);
+}
+
+async function fetchAllClients(){
+  // Supabase default limit is 1000 — paginate to get ALL clients
+  let all=[],from=0,size=1000;
+  while(true){
+    const{data}=await sb.from('clients').select('*').order('id').range(from,from+size-1);
+    if(!data||!data.length)break;
+    all=all.concat(data);
+    if(data.length<size)break;
+    from+=size;
+  }
+  return all;
 }
 
 // ========================================
@@ -1661,9 +1674,9 @@ async function createProject(){
     // Full refresh to ensure consistency
     const[,freshClients]=await Promise.all([
       fetchStatusCounts(),
-      sb.from('clients').select('*').order('created_at',{ascending:false})
+      fetchAllClients()
     ]);
-    if(freshClients.data)CLIENTS=freshClients.data;
+    if(freshClients)CLIENTS=freshClients;
     _statusUpdating=false;
   }
 
@@ -1692,7 +1705,7 @@ async function assignProspectsToProject(project){
   const existingPids=new Set((existingClients||[]).map(c=>c.prospect_id));
   const newProspects=prospects.filter(p=>!existingPids.has(p.id));
   if(!newProspects.length){showToast('Info','Tous les prospects ont deja un client','var(--accent)');
-    const{data:freshClients}=await sb.from('clients').select('*').order('created_at',{ascending:false});
+    const freshClients=await fetchAllClients();
     if(freshClients)CLIENTS=freshClients;return}
 
   // Link existing clients to this project (without changing their status)
@@ -1726,7 +1739,7 @@ async function assignProspectsToProject(project){
   console.log('Created',inserted,'client records for project',project.name);
   showToast(inserted+' prospects assignes a '+vendor,'','var(--green)');
   // Refresh data
-  const{data:freshClients}=await sb.from('clients').select('*').order('created_at',{ascending:false});
+  const freshClients=await fetchAllClients();
   if(freshClients)CLIENTS=freshClients;
 }
 
@@ -1826,7 +1839,7 @@ function confirmDeleteProject(id){
     PROJECTS=PROJECTS.filter(p=>p.id!==id);
     // Full refresh
     await fetchStatusCounts();
-    const{data:fc}=await sb.from('clients').select('*').order('created_at',{ascending:false});
+    const fc=await fetchAllClients();
     if(fc)CLIENTS=fc;
     _statusUpdating=false;
     APP.recompute();APP.bindAll();
@@ -2602,7 +2615,7 @@ const SC_MAP={
 };
 
 async function renderClients(container){
-  const{data:freshClients}=await sb.from('clients').select('*').order('created_at',{ascending:false});
+  const freshClients=await fetchAllClients();
   if(freshClients)CLIENTS=freshClients;
 
   const allMine=isAdmin?CLIENTS:CLIENTS.filter(c=>c.vendor_name===currentUser);
@@ -2944,11 +2957,11 @@ async function updateStatus(source,id,newStatus){
   }
 
   // 5. Full refresh from Supabase — guaranteed consistency across ALL tabs
-  const[,freshClients]=await Promise.all([
+  const[,freshClients2]=await Promise.all([
     fetchStatusCounts(),
-    sb.from('clients').select('*').order('created_at',{ascending:false})
+    fetchAllClients()
   ]);
-  if(freshClients.data)CLIENTS=freshClients.data;
+  if(freshClients2)CLIENTS=freshClients2;
 
   // Also sync prospect in DATA if changed from clients
   if(source==='clients'){
@@ -4150,7 +4163,7 @@ sb.channel('global-sync')
   })
   .on('postgres_changes',{event:'*',schema:'public',table:'clients'},async()=>{
     if(_statusUpdating)return; // skip — updateStatus handles full sync
-    const{data}=await sb.from('clients').select('*').order('created_at',{ascending:false});CLIENTS=data||[];
+    CLIENTS=await fetchAllClients();
     APP.recompute();APP.bindAll();await render();
   })
   .on('postgres_changes',{event:'*',schema:'public',table:'projects'},async()=>{
