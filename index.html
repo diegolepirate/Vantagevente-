@@ -1040,7 +1040,7 @@ async function render(){
 
     case 'projects': await renderProjects(content); break;
     case 'leaderboard': await renderLeaderboard(content); break;
-    case 'badges': renderBadges(content); break;
+    case 'badges': await renderBadges(content); break;
     case 'notes': renderNotes(content); break;
     case 'clients': await renderClients(content); break;
     case 'vendors': renderVendors(content); break;
@@ -1784,11 +1784,22 @@ async function renderLeaderboard(container){
 // ========================================
 // 5. BADGES TAB
 // ========================================
-function renderBadges(container){
+async function renderBadges(container){
   const vendor=isAdmin?VENDOR_NAMES[0]:currentUser;
-  const badges=getBadges(vendor);
-  const unlockedIds=new Set(Object.keys(badges).filter(k=>badges[k]&&badges[k].unlocked));
   const RARITY_META={common:{label:'COMMUN',border:'#8B6914',hi:'#C4A35A'},rare:{label:'RARE',border:'#1a6ea8',hi:'#4da6e8'},epic:{label:'ÉPIQUE',border:'#6b35b5',hi:'#a570e8'},legendary:{label:'LÉGENDAIRE',border:'#b8860b',hi:'#ffd700'},mythic:{label:'MYTHIQUE',border:'#8b0000',hi:'#ff4500'}};
+  // Compute stats for badge unlocking
+  const{count:_contacted}=await sb.from('prospects').select('*',{count:'exact',head:true}).eq('vendeur',vendor).neq('status','nouveau');
+  const contacted=_contacted||0;
+  const cli=CLIENTS.filter(c=>c.vendor_name===vendor);
+  const wins=cli.filter(c=>{const s=(c.site_status||'').toLowerCase();return s==='gagne'||s==='valide'}).length;
+  const maint=cli.filter(c=>(c.site_status||'').toLowerCase()==='maintenance').length;
+  const totalSales=wins+maint;
+  const lost=cli.filter(c=>(c.site_status||'').toLowerCase()==='perdu').length;
+  const regions=[...new Set(cli.map(c=>c.region).filter(Boolean))];
+  const pts=calcPoints(vendor);
+  const earn=calcEarnings(vendor);
+  const calls=contacted; // prospects contactés = appels effectués
+  const streak=0; // TODO: calculer streak réel plus tard
   const NEW_BADGES=[
   {id:'b1',name:'Premier Mot',desc:'1er appel passé',pts:20,rarity:'common',family:'appels'},
   {id:'b2',name:'Bavard',desc:'15 appels passés',pts:35,rarity:'common',family:'appels'},
@@ -1892,6 +1903,38 @@ function renderBadges(container){
   {id:'b100',name:'Le Maître',desc:'80+ badges débloqués',pts:1000,rarity:'mythic',family:'elite'}
   ];
   const FAMILIES_B={appels:{label:'📞 Appels',sub:'Maîtrise du téléphone'},ventes:{label:'💰 Ventes',sub:'L\u0027art de conclure'},conquete:{label:'⚔️ Conquête',sub:'Territoires grecs'},streak:{label:'🔥 Streak',sub:'Régularité et constance'},elite:{label:'👑 Élite',sub:'Exploits légendaires'}};
+
+  // Badge unlock conditions based on real stats
+  const unlockRules={
+    b1:calls>=1,b2:calls>=15,b3:calls>=30,b4:calls>=50,b5:calls>=100,
+    b6:calls>=200,b7:calls>=350,b8:calls>=500,b9:calls>=750,b10:calls>=1000,
+    b11:false,b12:false,b13:false,b14:false,b15:false,b16:false,
+    b17:false,b18:false,b19:false,b20:false,
+    b21:totalSales>=1,b22:totalSales>=3,b23:totalSales>=5,b24:totalSales>=10,
+    b25:totalSales>=20,b26:totalSales>=35,b27:totalSales>=50,b28:totalSales>=75,
+    b29:totalSales>=100,b30:totalSales>=150,b31:totalSales>=250,
+    b32:false,b33:false,b34:false,b35:false,b36:false,b37:false,b38:false,b39:false,b40:false,
+    b41:regions.length>=1,b42:regions.length>=3,b43:regions.length>=2,b44:regions.length>=4,
+    b45:false,b46:false,b47:false,b48:regions.length>=5,b49:false,b50:false,
+    b51:false,b52:regions.length>=8,b53:totalSales>=1,b54:false,b55:false,b56:false,
+    b57:false,b58:false,b59:false,b60:false,
+    b61:streak>=3,b62:streak>=5,b63:streak>=7,b64:streak>=10,b65:streak>=14,
+    b66:streak>=21,b67:streak>=30,b68:streak>=45,b69:streak>=60,b70:streak>=90,
+    b71:false,b72:false,b73:false,b74:false,b75:false,b76:false,b77:false,b78:false,b79:false,b80:false,
+    b81:true,b82:false,b83:false,
+    b84:false,b85:false,b86:false,
+    b87:lost>=50,b88:lost>=100,b89:lost>=200,
+    b90:false,b91:false,b92:false,b93:false,b94:false,b95:false,b96:false,b97:false,b98:false,b99:false,b100:false
+  };
+  // Compute unlocked count for meta-badges
+  const preUnlocked=new Set(Object.keys(unlockRules).filter(k=>unlockRules[k]));
+  unlockRules.b82=true; // explorateur - always if viewing badges
+  unlockRules.b84=preUnlocked.size>=10;
+  unlockRules.b85=preUnlocked.size>=25;
+  unlockRules.b86=preUnlocked.size>=50;
+  unlockRules.b100=preUnlocked.size>=80;
+  const unlockedIds=new Set(Object.keys(unlockRules).filter(k=>unlockRules[k]));
+
   const unlockCount=unlockedIds.size;
   const totalPts=NEW_BADGES.filter(b=>unlockedIds.has(b.id)).reduce((s,b)=>s+b.pts,0);
 
