@@ -1334,15 +1334,16 @@ async function renderProjects(container){
   const active=myProjects.filter(p=>p.status==='active');
   const history=myProjects.filter(p=>p.status!=='active');
 
-  // Fetch live counts from Supabase per active project
-  const projStats=await Promise.all(active.map(async p=>{
+  // Compute stats from local DATA instead of Supabase queries (fast + in sync)
+  const projStats=active.map(p=>{
     const families=parseFam(p.families);
-    let totalQ=sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',p.region);
-    let calledQ=sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',p.region).neq('status','nouveau');
-    let wonQ=sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',p.region).eq('status','gagne');
-    const[tR,cR,wR]=await Promise.all([totalQ,calledQ,wonQ]);
-    return{total:tR.count||0,called:cR.count||0,won:wR.count||0};
-  }));
+    let rows=DATA.filter(d=>d.region===p.region);
+    if(families.length)rows=rows.filter(d=>families.includes(d.famille));
+    const total=rows.length;
+    const called=rows.filter(d=>d.status!=='nouveau').length;
+    const won=rows.filter(d=>d.status==='gagne'||d.status==='maintenance').length;
+    return{total,called,won};
+  });
 
   let html=`<div class="projects-wrap">
     <div class="proj-header">
