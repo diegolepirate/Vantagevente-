@@ -2954,9 +2954,9 @@ async function autoCreateClientForVendor(prospect,vendeur){
   if(existing){
     // Clear hidden_by so card reappears + update vendor
     const newHidden=(existing.hidden_by||[]).filter(v=>v!==vendeur);
-    await sb.from('clients').update({vendor_name:vendeur,hidden_by:newHidden,updated_at:new Date().toISOString()}).eq('id',existing.id);
+    await sb.from('clients').update({vendor_name:vendeur,hidden_by:newHidden,site_status:'nouveau',updated_at:new Date().toISOString()}).eq('id',existing.id);
     const local=CLIENTS.find(c=>c.id===existing.id);
-    if(local){local.vendor_name=vendeur;local.hidden_by=newHidden}
+    if(local){local.vendor_name=vendeur;local.hidden_by=newHidden;local.site_status='nouveau'}
     return;
   }
   // Create new client
@@ -3092,8 +3092,9 @@ async function updateField(id,field,value){
     }
   }
 
+  // Skip full re-render on prospects tab — just update state
   APP.recompute();APP.bindAll();
-  render();
+  if(currentTab!=='prospects')render();
 }
 
 // ========================================
