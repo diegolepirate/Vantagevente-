@@ -2702,11 +2702,8 @@ async function updateStatus(source,id,newStatus){
     if(row)setTimeout(()=>showReminderPicker(pId,row.nom||''),300);
   }
 
-  // 5. Update row in place on prospects tab, full render otherwise
-  if(currentTab==='prospects'&&source==='prospects'){
-    const tr=document.querySelector('tr[data-pid="'+id+'"]');
-    if(tr){tr.className='row-'+newStatus;const sel=tr.querySelector('.tsel');if(sel)sel.value=newStatus}
-  }else{render()}
+  // 5. Always full render to keep all tabs in sync
+  render();
 }
 
 // Field update wrappers
