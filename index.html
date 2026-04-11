@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vantage CRM - Sales Pipeline</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://api.fontshare.com/v2/css?f[]=tanker@400&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=tanker@400&f[]=boxing@400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -100,7 +100,7 @@ input,select,textarea,button{font-family:'Inter',sans-serif}
 .rpk-item.active{background:rgba(56,189,248,.12)}
 .rpk-item .rpk-icon{font-size:14px;flex-shrink:0}
 .rpk-item .rpk-name{flex:1;font-size:.72rem;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rpk-item .rpk-badge{font-size:8px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:10px;flex-shrink:0}
+.rpk-badge{font-size:16px;font-weight:800;letter-spacing:.5px;padding:2px 6px;border-radius:10px;flex-shrink:0}
 .rpk-item .rpk-count{font-family:monospace;font-size:11px;font-weight:700;flex-shrink:0;min-width:40px;text-align:right}
 .msel-btn{padding:8px 14px;background:rgba(33,38,45,.9);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s;white-space:nowrap}
 .msel-btn:hover{border-color:rgba(56,189,248,.3)}
@@ -323,7 +323,7 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .lb-card.rank-1{border-color:var(--yellow);background:rgba(210,153,34,.04);box-shadow:0 0 20px rgba(210,153,34,.1)}
 .lb-rank{font-size:1.8rem;font-weight:800;min-width:50px;text-align:center;color:var(--gray);opacity:0;width:0;min-width:0;overflow:hidden;padding:0;margin:0}
 .lb-rank.r1{color:var(--yellow)}.lb-rank.r2{color:var(--gray)}.lb-rank.r3{color:var(--orange)}
-.lb-name{font-size:1rem;font-weight:700;flex:1;text-align:center}
+.lb-name{font-size:1rem;font-weight:700;flex:1;text-align:center;font-family:'Boxing',sans-serif}
 .lb-stats{display:flex;gap:24px;flex-wrap:wrap}
 .lb-stat{text-align:center}
 .lb-stat-val{font-size:1.2rem;font-weight:800}
@@ -2012,7 +2012,7 @@ async function renderLeaderboard(container){
 
   stats.forEach((r,i)=>{
     const rank=i+1;
-    const crown=rank===1?' <img src="assets/game-icons/icon-crown.png" width="72" height="72" style="object-fit:contain;vertical-align:middle">':'';
+    const crown=rank===1?' <img src="assets/game-icons/icon-crown.png" width="144" height="144" style="object-fit:contain;vertical-align:middle">':'';
     const isMe=r.name===currentUser;
     html+=`<div class="lb-card ${rank===1?'rank-1':''}" style="${isMe?'border-color:var(--green);box-shadow:0 0 16px rgba(52,211,153,.15)':''}">
       <div class="lb-rank r${rank}">#${rank}</div>
@@ -2154,7 +2154,7 @@ async function renderBadges(container){
   {id:'b99',name:'L\u0027Élu',desc:'Tous badges d\u0027une famille',pts:400,rarity:'mythic',family:'elite'},
   {id:'b100',name:'Le Maître',desc:'80+ badges débloqués',pts:1000,rarity:'mythic',family:'elite'}
   ];
-  const FAMILIES_B={appels:{label:'📞 Appels',sub:'Maîtrise du téléphone'},ventes:{label:'💰 Ventes',sub:'L\u0027art de conclure'},conquete:{label:'⚔️ Conquête',sub:'Territoires grecs'},streak:{label:'🔥 Streak',sub:'Régularité et constance'},elite:{label:'👑 Élite',sub:'Exploits légendaires'}};
+  const FAMILIES_B={appels:{label:'<img src="assets/game-icons/icon-appels.png" width="20" height="20" style="object-fit:contain;vertical-align:middle"> Appels',sub:'Maîtrise du téléphone'},ventes:{label:'<img src="assets/game-icons/icon-ventes.png" width="20" height="20" style="object-fit:contain;vertical-align:middle"> Ventes',sub:'L\u0027art de conclure'},conquete:{label:'<img src="assets/game-icons/icon-conquete.png" width="20" height="20" style="object-fit:contain;vertical-align:middle"> Conquête',sub:'Territoires grecs'},streak:{label:'<img src="assets/game-icons/icon-streak.png" width="20" height="20" style="object-fit:contain;vertical-align:middle"> Streak',sub:'Régularité et constance'},elite:{label:'<img src="assets/game-icons/icon-elite.png" width="20" height="20" style="object-fit:contain;vertical-align:middle"> Élite',sub:'Exploits légendaires'}};
 
   // Badge unlock conditions based on real stats
   const unlockRules={
