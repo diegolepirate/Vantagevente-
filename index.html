@@ -567,11 +567,16 @@ window.APP={
 
   recompute(){
     const bs={};
-    STATUSES.forEach(s=>bs[s]=0);
-    DATA.forEach(d=>{if(bs[d.status]!==undefined)bs[d.status]++});
-    bs.total=DATA.length;
+    if(STATUS_COUNTS&&STATUS_COUNTS.total){
+      STATUSES.forEach(s=>bs[s]=STATUS_COUNTS[s]||0);
+      bs.total=STATUS_COUNTS.total||0;
+    }else{
+      STATUSES.forEach(s=>bs[s]=0);
+      DATA.forEach(d=>{if(bs[d.status]!==undefined)bs[d.status]++});
+      bs.total=DATA.length;
+    }
     this.computed.byStatus=bs;
-    this.computed.totalProspects=TOTAL_COUNT||DATA.length;
+    this.computed.totalProspects=TOTAL_COUNT||bs.total;
 
     this.computed.myClients=isAdmin?CLIENTS:CLIENTS.filter(c=>c.vendor_name===currentUser);
     const visible=this.computed.myClients.filter(c=>{const hb=c.hidden_by||[];return isAdmin||!hb.includes(currentUser)});
@@ -2676,7 +2681,12 @@ async function updateData(table,id,fields){
     if(c&&c.prospect_id){
       const pu={};Object.entries(fields).forEach(([k,v])=>{if(C2P_MAP[k])pu[C2P_MAP[k]]=v});
       if(fields.site_status)pu.status=STATUS_C2P[fields.site_status]||fields.site_status;
-      if(Object.keys(pu).length){await sb.from('prospects').update({...pu,updated_at:new Date().toISOString()}).eq('id',c.prospect_id);const row=DATA.find(d=>d.id===c.prospect_id);if(row)Object.assign(row,pu)}
+      if(Object.keys(pu).length){
+        await sb.from('prospects').update({...pu,updated_at:new Date().toISOString()}).eq('id',c.prospect_id);
+        const row=DATA.find(d=>d.id===c.prospect_id);
+        if(row)Object.assign(row,pu);
+        else{const{data:pRow}=await sb.from('prospects').select('*').eq('id',c.prospect_id).maybeSingle();if(pRow)DATA.push(pRow)}
+      }
     }
   }
 }
@@ -2690,25 +2700,35 @@ async function updateStatus(source,id,newStatus){
     const lc=CLIENTS.find(c=>c.prospect_id===id);if(lc)lc.site_status=newStatus;
   }else if(source==='clients'){
     const lc=CLIENTS.find(c=>c.id===id);
-    if(lc){lc.site_status=newStatus;const row=DATA.find(d=>d.id===lc.prospect_id);if(row)row.status=newStatus}
+    if(lc){
+      lc.site_status=newStatus;
+      const row=DATA.find(d=>d.id===lc.prospect_id);
+      if(row)row.status=newStatus;
+    }
   }
 
   // 2. Immediate UI update (before network)
   APP.recompute();APP.bindAll();
   statusToast(newStatus);
 
-  // 3. Persist to Supabase
+  // 3. Persist to Supabase (both tables in parallel)
+  const now=new Date().toISOString();
   if(source==='prospects'){
-    await sb.from('prospects').update({status:newStatus,updated_at:new Date().toISOString()}).eq('id',id);
-    const{data:cl}=await sb.from('clients').select('id').eq('prospect_id',id).maybeSingle();
-    if(cl)await sb.from('clients').update({site_status:newStatus,updated_at:new Date().toISOString()}).eq('id',cl.id);
+    const pUp=sb.from('prospects').update({status:newStatus,updated_at:now}).eq('id',id);
+    const cSync=sb.from('clients').select('id').eq('prospect_id',id).maybeSingle().then(({data:cl})=>{
+      if(cl)return sb.from('clients').update({site_status:newStatus,updated_at:now}).eq('id',cl.id);
+    });
+    await Promise.all([pUp,cSync]);
   }else if(source==='clients'){
-    const{data:c}=await sb.from('clients').select('prospect_id').eq('id',id).maybeSingle();
-    if(c&&c.prospect_id){
-      await sb.from('prospects').update({status:newStatus,updated_at:new Date().toISOString()}).eq('id',c.prospect_id);
-      await sb.from('clients').update({site_status:newStatus,updated_at:new Date().toISOString()}).eq('id',id);
-    }else{
-      await sb.from('clients').update({site_status:newStatus,updated_at:new Date().toISOString()}).eq('id',id);
+    const lc=CLIENTS.find(c=>c.id===id);
+    const prospectId=lc?lc.prospect_id:null;
+    const cUp=sb.from('clients').update({site_status:newStatus,updated_at:now}).eq('id',id);
+    const pSync=prospectId?sb.from('prospects').update({status:newStatus,updated_at:now}).eq('id',prospectId):Promise.resolve();
+    await Promise.all([cUp,pSync]);
+    // If prospect not in paginated DATA, fetch and inject it so all tabs stay synced
+    if(prospectId&&!DATA.find(d=>d.id===prospectId)){
+      const{data:pRow}=await sb.from('prospects').select('*').eq('id',prospectId).maybeSingle();
+      if(pRow)DATA.push(pRow);
     }
   }
 
@@ -2720,8 +2740,9 @@ async function updateStatus(source,id,newStatus){
     if(row)setTimeout(()=>showReminderPicker(pId,row.nom||''),300);
   }
 
-  // 5. Refresh global status counts then re-render
+  // 5. Refresh global status counts then re-render ALL
   await fetchStatusCounts();
+  APP.recompute();APP.bindAll();
   render();
 }
 
