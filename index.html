@@ -1069,6 +1069,19 @@ async function logActivity(action,target,prospectId,details){
   return;
 }
 
+async function logHistory(prospectId,prospectName,actionType,oldValue,newValue,note){
+  await sb.from('prospect_history').insert({
+    prospect_id:prospectId,
+    prospect_name:prospectName||'',
+    vendor_name:currentUser,
+    action_type:actionType,
+    old_value:oldValue||null,
+    new_value:newValue||null,
+    note:note||null,
+    created_at:new Date().toISOString()
+  });
+}
+
 // ========================================
 // OWNER FILTER COUNTS (async)
 // ========================================
@@ -2710,6 +2723,16 @@ async function updateStatus(source,id,newStatus){
   console.log('updateStatus:',source,id,'→',newStatus);
   _statusUpdating=true;
 
+  // 0. Capture old status + prospect info for history
+  let _hPid=id,_hName='',_hOld='';
+  if(source==='prospects'){
+    const r=DATA.find(d=>d.id===id);_hName=r?r.nom:'';_hOld=r?r.status:'';
+  }else if(source==='clients'){
+    const lc=CLIENTS.find(c=>c.id===id);
+    _hOld=lc?lc.site_status:'';_hPid=lc?lc.prospect_id:id;
+    const r=_hPid?DATA.find(d=>d.id===_hPid):null;_hName=r?r.nom:(lc?lc.business_name:'');
+  }
+
   // 1. Optimistic local update — update BOTH arrays immediately
   if(source==='prospects'){
     const row=DATA.find(d=>d.id===id);if(row)row.status=newStatus;
@@ -2744,6 +2767,11 @@ async function updateStatus(source,id,newStatus){
       prospectId?sb.from('prospects').update({status:newStatus,updated_at:now}).eq('id',prospectId):Promise.resolve()
     ]);
   }
+
+  // 3b. Log history
+  logHistory(_hPid,_hName,'status_change',_hOld,newStatus,null);
+  if(newStatus==='gagne')logHistory(_hPid,_hName,'sale_won',null,'500€',null);
+  if(newStatus==='maintenance')logHistory(_hPid,_hName,'sale_won',null,'150€ maintenance',null);
 
   // 4. Auto-create client if needed (prospect→client linking)
   if(source==='prospects'){
@@ -3070,7 +3098,14 @@ async function updateField(id,field,value){
   if(field==='status')return updateStatus('prospects',id,value);
 
   const row=DATA.find(d=>d.id===id);
+  const oldVal=row?row[field]:'';
   await updateData('prospects',id,{[field]:value});
+
+  // Log history for key fields
+  if(field==='vendeur')logHistory(id,row?row.nom:'','assigned',oldVal||'',value||'',null);
+  if(field==='notes')logHistory(id,row?row.nom:'','note_added',null,value,null);
+  if(field==='email'||field==='email2')logHistory(id,row?row.nom:'','email_added',null,value,null);
+  if(field==='instagram'||field==='facebook'||field==='numero'||field==='numero2')logHistory(id,row?row.nom:'','contact_added',null,value,field);
 
   // Create client when vendor is assigned, hide when unassigned
   if(field==='vendeur'&&row){
@@ -3263,6 +3298,7 @@ async function saveCallResult(prospectId,duration){
   }
 
   await logActivity('call_completed',callProspect.nom,prospectId,result+' ('+formatDuration(duration)+')');
+  logHistory(prospectId,callProspect.nom,'call',null,formatDuration(duration),result);
 
   closeModal();
   callProspect=null;
