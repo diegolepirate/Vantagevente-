@@ -1644,10 +1644,21 @@ function confirmDeleteProject(id){
         await sb.from('prospects').update({vendeur:'',status:'nouveau',updated_at:new Date().toISOString()}).in('id',pIds);
         // Delete client records for these prospects
         await sb.from('clients').delete().in('prospect_id',pIds);
+        // Sync local arrays
+        pIds.forEach(pid=>{
+          const row=DATA.find(d=>d.id===pid);
+          if(row){row.vendeur='';row.status='nouveau'}
+        });
+        CLIENTS=CLIENTS.filter(c=>!pIds.includes(c.prospect_id));
       }
     }
     await sb.from('projects').update({status:'deleted'}).eq('id',id);
     PROJECTS=PROJECTS.filter(p=>p.id!==id);
+    // Full refresh
+    await fetchStatusCounts();
+    const{data:fc}=await sb.from('clients').select('*').order('created_at',{ascending:false});
+    if(fc)CLIENTS=fc;
+    APP.recompute();APP.bindAll();
     showToast('Projet supprime \u2014 prospects liberes','','var(--red)');
     render();
   });
@@ -2557,7 +2568,9 @@ async function hideClient(id){
       await sb.from('prospects').update({status:'nouveau',vendeur:'',updated_at:new Date().toISOString()}).eq('id',c.prospect_id);
       const row=DATA.find(d=>d.id===c.prospect_id);
       if(row){row.status='nouveau';row.vendeur=''}
+      else{const{data:p}=await sb.from('prospects').select('*').eq('id',c.prospect_id).maybeSingle();if(p){p.status='nouveau';p.vendeur='';DATA.push(p)}}
     }
+    await fetchStatusCounts();
     showToast('Client retire','Prospect remis a disposition','var(--accent)');
     APP.recompute();APP.bindAll();
     render();
@@ -3059,14 +3072,28 @@ async function updateField(id,field,value){
   const row=DATA.find(d=>d.id===id);
   await updateData('prospects',id,{[field]:value});
 
-  // Create client when vendor is assigned
-  if(field==='vendeur'&&row&&value){
-    await autoCreateClientForVendor(row,value);
+  // Create client when vendor is assigned, hide when unassigned
+  if(field==='vendeur'&&row){
+    if(value){
+      await autoCreateClientForVendor(row,value);
+    }else{
+      // Deselect: hide linked client card + reset prospect status
+      const lc=CLIENTS.find(c=>c.prospect_id===id);
+      if(lc){
+        const hb=(lc.hidden_by||[]);if(!hb.includes(currentUser))hb.push(currentUser);
+        await sb.from('clients').update({hidden_by:hb,updated_at:new Date().toISOString()}).eq('id',lc.id);
+        lc.hidden_by=hb;
+      }
+      if(row.status!=='nouveau'){
+        row.status='nouveau';
+        await sb.from('prospects').update({status:'nouveau',updated_at:new Date().toISOString()}).eq('id',id);
+      }
+      await fetchStatusCounts();
+    }
   }
 
-  // Skip full re-render on prospects tab — just update state
   APP.recompute();APP.bindAll();
-  if(currentTab!=='prospects')render();
+  render();
 }
 
 // ========================================
