@@ -2021,10 +2021,12 @@ async function renderLeaderboard(container){
     const rank=i+1;
     const crown=rank===1?' <img src="assets/game-icons/icon-crown.png" width="144" height="144" style="object-fit:contain;vertical-align:middle">':'';
     const isMe=r.name===currentUser;
-    html+=`<div class="lb-card ${rank===1?'rank-1':''}" style="${isMe?'border-color:var(--green);box-shadow:0 0 16px rgba(52,211,153,.15)':''}">
-      <div class="lb-rank r${rank}">#${rank}</div>
-      <div class="lb-name">${r.name}${crown}${getStreakIcon(r.name)}${isMe?' <span style="font-size:.6rem;color:var(--green);opacity:.7">(vous)</span>':''}</div>
-      <div class="lb-stats">
+    const _r1Bg=rank===1?'background:url(assets/game-icons/bg-rank1.png) center/cover no-repeat;':'';
+    html+=`<div class="lb-card ${rank===1?'rank-1':''}" style="position:relative;overflow:hidden;${_r1Bg}${isMe?'border-color:var(--green);box-shadow:0 0 16px rgba(52,211,153,.15)':''}">
+      ${rank===1?'<div style="position:absolute;inset:0;background:rgba(13,17,23,.75);z-index:0"></div>':''}
+      <div class="lb-rank r${rank}" style="position:relative;z-index:1">#${rank}</div>
+      <div class="lb-name" style="position:relative;z-index:1">${r.name}${crown}${getStreakIcon(r.name)}${isMe?' <span style="font-size:.6rem;color:var(--green);opacity:.7">(vous)</span>':''}</div>
+      <div class="lb-stats" style="position:relative;z-index:1">
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--yellow)">${r.points}</div><div class="lb-stat-lbl">Points</div></div>
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--accent)">${r.calls}</div><div class="lb-stat-lbl">Appels</div></div>
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--green)">${r.wins}</div><div class="lb-stat-lbl">Gagn\u00e9s</div></div>
