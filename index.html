@@ -2702,11 +2702,14 @@ async function renderClients(container){
     const days=Math.floor((Date.now()-new Date(c.created_at||c.sold_at))/(1000*60*60*24));
     const sOpts=statusOpts(c.site_status);
 
+    const _statusBg={appele:'bg-status-appele.png',gagne:'bg-status-gagne.png'};
+    const _sBg=_statusBg[c.site_status]||'';
     html+=`<div class="cc-wrap cl-card"
       onmouseenter="var b=this.querySelector('.rm-b');if(b)b.style.opacity='1';this.querySelector('.cc-card').classList.add('cc-hover')"
       onmouseleave="var b=this.querySelector('.rm-b');if(b)b.style.opacity='0';var cd=this.querySelector('.cc-card');cd.classList.remove('cc-hover');cd.style.transform=''">
       <div class="cc-border">
-      <div class="cc-card">
+      <div class="cc-card" style="${_sBg?'background:none':''}">
+        ${_sBg?`<div style="position:absolute;inset:0;z-index:0"><img src="assets/game-icons/${_sBg}" style="width:100%;height:100%;object-fit:cover;object-position:center 20%"></div><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(26,16,53,.8) 0%,rgba(31,0,66,.75) 100%);z-index:0"></div>`:''}
         <div class="corner-elements"><span></span><span></span><span></span><span></span></div>
         <div class="card-glare"></div>
         <div class="card-content">
