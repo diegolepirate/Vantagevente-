@@ -902,8 +902,8 @@ async function loadData(){
   ALL_REGIONS=(regData||[]).map(r=>r.region).filter(Boolean);
   REGION_COUNTS={};(regData||[]).forEach(r=>{if(r.region)REGION_COUNTS[r.region]=r.total||0});
 
-  // Load prospects (first page)
-  await loadProspects(true);
+  // Load prospects (first page) + status counts
+  await Promise.all([loadProspects(true), fetchStatusCounts()]);
 
   // Load other data in parallel
   const[projRes,cliRes,remRes,blRes,chRes,scrRes]=await Promise.all([
@@ -967,6 +967,17 @@ async function loadMore(){
   pageOffset+=PAGE_SIZE;
   await loadProspects(false);
   render();
+}
+
+// ========================================
+// GLOBAL STATUS COUNTS (from Supabase, not paginated DATA)
+// ========================================
+let STATUS_COUNTS={};
+async function fetchStatusCounts(){
+  const promises=STATUSES.map(s=>sb.from('prospects').select('*',{count:'exact',head:true}).eq('status',s));
+  const results=await Promise.all(promises);
+  STATUSES.forEach((s,i)=>{STATUS_COUNTS[s]=results[i].count||0});
+  STATUS_COUNTS.total=Object.values(STATUS_COUNTS).reduce((a,b)=>a+b,0);
 }
 
 // ========================================
@@ -1109,10 +1120,8 @@ async function renderProspects(container){
   // Get counts for owner filter
   const counts=await getOwnerCounts();
 
-  // Status counts from local data
-  const statusCounts={};
-  STATUSES.forEach(s=>statusCounts[s]=0);
-  DATA.forEach(d=>{if(statusCounts[d.status]!==undefined)statusCounts[d.status]++});
+  // Status counts from Supabase (global, not paginated)
+  const statusCounts=STATUS_COUNTS;
 
   const families=[...new Set(DATA.map(d=>d.famille).filter(Boolean))].sort();
   const clientPids=new Set(CLIENTS.filter(c=>!isAdmin?c.vendor_name===currentUser:true).map(c=>c.prospect_id).filter(Boolean));
@@ -1334,16 +1343,16 @@ async function renderProjects(container){
   const active=myProjects.filter(p=>p.status==='active');
   const history=myProjects.filter(p=>p.status!=='active');
 
-  // Compute stats from local DATA instead of Supabase queries (fast + in sync)
-  const projStats=active.map(p=>{
-    const families=parseFam(p.families);
-    let rows=DATA.filter(d=>d.region===p.region);
-    if(families.length)rows=rows.filter(d=>families.includes(d.famille));
-    const total=rows.length;
-    const called=rows.filter(d=>d.status!=='nouveau').length;
-    const won=rows.filter(d=>d.status==='gagne'||d.status==='maintenance').length;
-    return{total,called,won};
-  });
+  // Fetch stats from Supabase per project (accurate, not limited by DATA pagination)
+  const projStats=await Promise.all(active.map(async p=>{
+    const region=p.region;
+    const totalQ=sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',region);
+    const calledQ=sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',region).neq('status','nouveau');
+    const wonGQ=sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',region).eq('status','gagne');
+    const wonMQ=sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',region).eq('status','maintenance');
+    const[tR,cR,wgR,wmR]=await Promise.all([totalQ,calledQ,wonGQ,wonMQ]);
+    return{total:tR.count||0,called:cR.count||0,won:(wgR.count||0)+(wmR.count||0)};
+  }));
 
   let html=`<div class="projects-wrap">
     <div class="proj-header">
@@ -2384,6 +2393,7 @@ async function dismissReminder(id){
 // 8. CLIENTS TAB
 // ========================================
 let activeClientTab='all';
+let clientPageLimit=50;
 const CLIENT_TABS=[
   {id:'all',label:'Tous',color:'#a78bfa'},
   {id:'nouveau',label:'\u00C0 contacter',color:'#67e8f9'},
@@ -2414,7 +2424,9 @@ async function renderClients(container){
   // Counts per status
   const counts={};
   CLIENT_TABS.forEach(t=>{counts[t.id]=t.id==='all'?visible.length:visible.filter(c=>c.site_status===t.id).length});
-  const filtered=activeClientTab==='all'?visible:visible.filter(c=>c.site_status===activeClientTab);
+  const allFiltered=activeClientTab==='all'?visible:visible.filter(c=>c.site_status===activeClientTab);
+  const CLIENT_PAGE=50;
+  const filtered=allFiltered.slice(0,clientPageLimit||CLIENT_PAGE);
 
   // Stats
   const won=visible.filter(c=>c.site_status==='gagne').length;
@@ -2450,7 +2462,7 @@ async function renderClients(container){
 
     <!-- Status tabs -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-      ${CLIENT_TABS.map(t=>`<button onclick="activeClientTab='${t.id}';render()" style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;background:${activeClientTab===t.id?t.color+'22':'rgba(255,255,255,.04)'};border:1px solid ${activeClientTab===t.id?t.color:'rgba(255,255,255,.1)'};color:${activeClientTab===t.id?t.color:'rgba(255,255,255,.4)'}">${t.label} <span data-client-count="${t.id}" style="background:${activeClientTab===t.id?t.color+'33':'rgba(255,255,255,.06)'};padding:1px 6px;border-radius:10px;margin-left:3px;font-size:10px">${counts[t.id]||0}</span></button>`).join('')}
+      ${CLIENT_TABS.map(t=>`<button onclick="activeClientTab='${t.id}';clientPageLimit=50;render()" style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;background:${activeClientTab===t.id?t.color+'22':'rgba(255,255,255,.04)'};border:1px solid ${activeClientTab===t.id?t.color:'rgba(255,255,255,.1)'};color:${activeClientTab===t.id?t.color:'rgba(255,255,255,.4)'}">${t.label} <span data-client-count="${t.id}" style="background:${activeClientTab===t.id?t.color+'33':'rgba(255,255,255,.06)'};padding:1px 6px;border-radius:10px;margin-left:3px;font-size:10px">${counts[t.id]||0}</span></button>`).join('')}
     </div>
 
     <!-- Cards grid -->
@@ -2497,6 +2509,11 @@ async function renderClients(container){
     </div>`;
   });
 
+  if(allFiltered.length>filtered.length){
+    html+=`<div style="grid-column:1/-1;text-align:center;padding:18px">
+      <button onclick="clientPageLimit+=50;render()" style="padding:8px 28px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:#a78bfa;transition:all .2s">Charger plus (${filtered.length}/${allFiltered.length})</button>
+    </div>`;
+  }
   html+=`</div></div>`;
   container.innerHTML=html;
 
@@ -2703,7 +2720,8 @@ async function updateStatus(source,id,newStatus){
     if(row)setTimeout(()=>showReminderPicker(pId,row.nom||''),300);
   }
 
-  // 5. Always full render to keep all tabs in sync
+  // 5. Refresh global status counts then re-render
+  await fetchStatusCounts();
   render();
 }
 
