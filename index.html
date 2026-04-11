@@ -158,48 +158,23 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .cl-card input,.cl-card textarea{background:rgba(255,255,255,.04)!important;color:#fff!important}
 
 /* Uiverse.io 00Kubi card — CRM adapted */
-.cc-wrap{position:relative;transition:200ms;perspective:800px}
+.cc-wrap{position:relative;transition:200ms;perspective:800px;-webkit-user-select:none;-moz-user-select:none;user-select:none}
 .cc-wrap:active{transform:scale(.97)}
-.cc-card{position:relative;z-index:0;display:flex;justify-content:center;align-items:center;border-radius:20px;transition:700ms;background:linear-gradient(45deg,#1a1035,#1f0042);border:2px solid rgba(255,255,255,.1);overflow:hidden;box-shadow:0 0 20px rgba(0,0,0,.3),inset 0 0 20px rgba(0,0,0,.2)}
+.cc-wrap input,.cc-wrap textarea,.cc-wrap select{-webkit-user-select:text;-moz-user-select:text;user-select:text}
+.cc-card{position:relative;z-index:0;border-radius:20px;transition:700ms;background:linear-gradient(45deg,#1a1035,#1f0042);border:2px solid rgba(255,255,255,.1);overflow:hidden;box-shadow:0 0 20px rgba(0,0,0,.3),inset 0 0 20px rgba(0,0,0,.2)}
+.cc-card.cc-hover{transition:125ms ease-in-out;filter:brightness(1.1)}
 .cc-card .card-content{position:relative;width:100%;padding:16px;z-index:1}
-.cc-card::before{content:"";background:radial-gradient(circle at center,rgba(232,121,249,.1) 0%,rgba(103,232,249,.05) 50%,transparent 100%);filter:blur(20px);opacity:0;width:150%;height:150%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transition:opacity .3s}
-.cc-wrap:hover .cc-card::before{opacity:1}
-.cc-wrap:hover .cc-card{transition:300ms;filter:brightness(1.1)}
 
-/* 5x5 grid tracker for 3D tilt */
-.cc-canvas{position:absolute;inset:0;z-index:200;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);border-radius:20px}
-.cc-canvas>div{cursor:pointer}
-.cc-canvas .tr-1:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(20deg) rotateY(-10deg)}
-.cc-canvas .tr-2:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(20deg) rotateY(-5deg)}
-.cc-canvas .tr-3:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(20deg) rotateY(0deg)}
-.cc-canvas .tr-4:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(20deg) rotateY(5deg)}
-.cc-canvas .tr-5:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(20deg) rotateY(10deg)}
-.cc-canvas .tr-6:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(10deg) rotateY(-10deg)}
-.cc-canvas .tr-7:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(10deg) rotateY(-5deg)}
-.cc-canvas .tr-8:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(10deg) rotateY(0deg)}
-.cc-canvas .tr-9:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(10deg) rotateY(5deg)}
-.cc-canvas .tr-10:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(10deg) rotateY(10deg)}
-.cc-canvas .tr-11:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(0deg) rotateY(-10deg)}
-.cc-canvas .tr-12:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(0deg) rotateY(-5deg)}
-.cc-canvas .tr-13:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(0deg) rotateY(0deg)}
-.cc-canvas .tr-14:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(0deg) rotateY(5deg)}
-.cc-canvas .tr-15:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(0deg) rotateY(10deg)}
-.cc-canvas .tr-16:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-10deg) rotateY(-10deg)}
-.cc-canvas .tr-17:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-10deg) rotateY(-5deg)}
-.cc-canvas .tr-18:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-10deg) rotateY(0deg)}
-.cc-canvas .tr-19:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-10deg) rotateY(5deg)}
-.cc-canvas .tr-20:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-10deg) rotateY(10deg)}
-.cc-canvas .tr-21:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-20deg) rotateY(-10deg)}
-.cc-canvas .tr-22:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-20deg) rotateY(-5deg)}
-.cc-canvas .tr-23:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-20deg) rotateY(0deg)}
-.cc-canvas .tr-24:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-20deg) rotateY(5deg)}
-.cc-canvas .tr-25:hover~.cc-card{transition:125ms ease-in-out;transform:rotateX(-20deg) rotateY(10deg)}
+/* Radial glow behind card on hover */
+.cc-card::before{content:"";background:radial-gradient(circle at center,rgba(232,121,249,.1) 0%,rgba(103,232,249,.05) 50%,transparent 100%);filter:blur(20px);opacity:0;width:150%;height:150%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);transition:opacity .3s;pointer-events:none}
+.cc-card.cc-hover::before{opacity:.8}
 
 /* Glare */
-.cc-card .card-glare{position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.05) 45%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.05) 55%,rgba(255,255,255,0) 100%);opacity:0;transition:opacity 300ms;pointer-events:none}
-.cc-card:hover .card-glare{opacity:1}
+.cc-card .card-glare{position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.05) 45%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.05) 55%,rgba(255,255,255,0) 100%);opacity:0;transition:opacity 300ms;pointer-events:none;z-index:0}
+.cc-card.cc-hover .card-glare{opacity:1}
 
 /* Cyber lines — animated */
+.cc-card .cyber-lines{position:absolute;inset:0;pointer-events:none;z-index:0}
 .cc-card .cyber-lines span{position:absolute;background:linear-gradient(90deg,transparent,rgba(168,85,247,.2),transparent);height:1px;width:100%}
 .cc-card .cyber-lines span:nth-child(1){top:20%;left:0;transform:scaleX(0);transform-origin:left;animation:ccLineGrow 3s linear infinite}
 .cc-card .cyber-lines span:nth-child(2){top:40%;right:0;transform:scaleX(0);transform-origin:right;animation:ccLineGrow 3s linear infinite 1s}
@@ -208,28 +183,30 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 @keyframes ccLineGrow{0%{transform:scaleX(0);opacity:0}50%{transform:scaleX(1);opacity:1}100%{transform:scaleX(0);opacity:0}}
 
 /* Corner elements */
+.cc-card .corner-elements{position:absolute;inset:0;pointer-events:none;z-index:0}
 .cc-card .corner-elements span{position:absolute;width:15px;height:15px;border:2px solid rgba(168,85,247,.3);transition:all .3s}
 .cc-card .corner-elements span:nth-child(1){top:10px;left:10px;border-right:0;border-bottom:0}
 .cc-card .corner-elements span:nth-child(2){top:10px;right:10px;border-left:0;border-bottom:0}
 .cc-card .corner-elements span:nth-child(3){bottom:10px;left:10px;border-right:0;border-top:0}
 .cc-card .corner-elements span:nth-child(4){bottom:10px;right:10px;border-left:0;border-top:0}
-.cc-card:hover .corner-elements span{border-color:rgba(168,85,247,.8);box-shadow:0 0 10px rgba(168,85,247,.5)}
+.cc-card.cc-hover .corner-elements span{border-color:rgba(168,85,247,.8);box-shadow:0 0 10px rgba(168,85,247,.5)}
 
 /* Scan line */
-.cc-card .scan-line{position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(168,85,247,.1),transparent);transform:translateY(-100%);animation:ccScan 2s linear infinite;pointer-events:none}
+.cc-card .scan-line{position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(168,85,247,.1),transparent);transform:translateY(-100%);animation:ccScan 2s linear infinite;pointer-events:none;z-index:0}
 @keyframes ccScan{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
 
 /* Glowing elements */
-.cc-card .glowing-elements{position:absolute;inset:0;pointer-events:none}
+.cc-card .glowing-elements{position:absolute;inset:0;pointer-events:none;z-index:0}
 .cc-card .glow-1,.cc-card .glow-2,.cc-card .glow-3{position:absolute;width:100px;height:100px;border-radius:50%;filter:blur(15px);opacity:0;transition:opacity .3s}
 .cc-card .glow-1{top:-20px;left:-20px;background:radial-gradient(circle,rgba(232,121,249,.3) 0%,transparent 70%)}
 .cc-card .glow-2{top:50%;right:-30px;transform:translateY(-50%);background:radial-gradient(circle,rgba(103,232,249,.3) 0%,transparent 70%)}
 .cc-card .glow-3{bottom:-20px;left:30%;background:radial-gradient(circle,rgba(168,85,247,.3) 0%,transparent 70%)}
-.cc-canvas:hover~.cc-card .glow-1,.cc-canvas:hover~.cc-card .glow-2,.cc-canvas:hover~.cc-card .glow-3{opacity:1}
+.cc-card.cc-hover .glow-1,.cc-card.cc-hover .glow-2,.cc-card.cc-hover .glow-3{opacity:1}
 
 /* Particles */
-.cc-card .card-particles span{position:absolute;width:3px;height:3px;background:#e879f9;border-radius:50%;opacity:0;transition:opacity .3s}
-.cc-canvas:hover~.cc-card .card-particles span{animation:ccParticle 2s infinite}
+.cc-card .card-particles{position:absolute;inset:0;pointer-events:none;z-index:0}
+.cc-card .card-particles span{position:absolute;width:3px;height:3px;background:#e879f9;border-radius:50%;opacity:0}
+.cc-card.cc-hover .card-particles span{animation:ccParticle 2s infinite}
 .cc-card .card-particles span:nth-child(1){--x:1;--y:-1;top:40%;left:20%}
 .cc-card .card-particles span:nth-child(2){--x:-1;--y:-1;top:60%;right:20%}
 .cc-card .card-particles span:nth-child(3){--x:.5;--y:1;top:20%;left:40%}
@@ -237,10 +214,6 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .cc-card .card-particles span:nth-child(5){--x:1;--y:.5;top:30%;left:60%}
 .cc-card .card-particles span:nth-child(6){--x:-1;--y:.5;top:70%;right:60%}
 @keyframes ccParticle{0%{transform:translate(0,0);opacity:0}50%{opacity:1}100%{transform:translate(calc(var(--x)*30px),calc(var(--y)*30px));opacity:0}}
-
-/* No-select */
-.cc-wrap{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
-.cc-wrap input,.cc-wrap textarea,.cc-wrap select{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text}
 .ninp{width:100%;min-width:100px;padding:3px 6px;background:var(--bg);border:1px solid rgba(255,255,255,.04);border-radius:4px;color:var(--white);font-size:.7rem;outline:none;transition:.2s}.ninp:focus{border-color:var(--yellow)}
 
 /* ====== PIPELINE ====== */
@@ -2517,9 +2490,8 @@ async function renderClients(container){
     const sOpts=statusOpts(c.site_status);
 
     html+=`<div class="cc-wrap cl-card"
-      onmouseenter="var b=this.querySelector('.rm-b');if(b)b.style.opacity='1'"
-      onmouseleave="var b=this.querySelector('.rm-b');if(b)b.style.opacity='0'">
-      <div class="cc-canvas"><div class="tr-1"></div><div class="tr-2"></div><div class="tr-3"></div><div class="tr-4"></div><div class="tr-5"></div><div class="tr-6"></div><div class="tr-7"></div><div class="tr-8"></div><div class="tr-9"></div><div class="tr-10"></div><div class="tr-11"></div><div class="tr-12"></div><div class="tr-13"></div><div class="tr-14"></div><div class="tr-15"></div><div class="tr-16"></div><div class="tr-17"></div><div class="tr-18"></div><div class="tr-19"></div><div class="tr-20"></div><div class="tr-21"></div><div class="tr-22"></div><div class="tr-23"></div><div class="tr-24"></div><div class="tr-25"></div></div>
+      onmouseenter="var b=this.querySelector('.rm-b');if(b)b.style.opacity='1';this.querySelector('.cc-card').classList.add('cc-hover')"
+      onmouseleave="var b=this.querySelector('.rm-b');if(b)b.style.opacity='0';var cd=this.querySelector('.cc-card');cd.classList.remove('cc-hover');cd.style.transform=''">
       <div class="cc-card" style="border-color:${sc.border}">
         <div class="cyber-lines"><span></span><span></span><span></span><span></span></div>
         <div class="corner-elements"><span></span><span></span><span></span><span></span></div>
@@ -2531,18 +2503,18 @@ async function renderClients(container){
           <button class="rm-b" onclick="event.stopPropagation();hideClient(${c.id})" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:12px;cursor:pointer;opacity:0;transition:opacity .2s;line-height:1;display:flex;align-items:center;justify-content:center;z-index:2">\u2715</button>
           <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;padding-right:24px">${escHtml(c.business_name||'')}</div>
           <span style="font-size:10px;font-weight:700;color:${sc.color};margin-bottom:10px;display:inline-block">${sc.label}</span>
-          <select onchange="updateClientField(${c.id},'site_status',this.value)" style="width:100%;background:#1a1035;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;margin-bottom:10px;outline:none;cursor:pointer;box-sizing:border-box;position:relative;z-index:201">${sOpts}</select>
+          <select onchange="updateClientField(${c.id},'site_status',this.value)" style="width:100%;background:#1a1035;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;margin-bottom:10px;outline:none;cursor:pointer;box-sizing:border-box">${sOpts}</select>
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
             ${c.phone?`<div style="font-family:monospace;font-size:11px;color:#a78bfa">\uD83D\uDCDE ${escHtml(c.phone)}</div>`:''}
             ${c.email?`<div style="font-size:11px;color:rgba(255,255,255,.4)">\uD83D\uDCE7 ${escHtml(c.email)}</div>`:''}
             ${c.region?`<div style="font-size:10px;color:rgba(255,255,255,.25)">\uD83D\uDCCD ${escHtml(c.region)}</div>`:''}
           </div>
-          <input placeholder="\uD83D\uDC64 Responsable..." value="${escHtml(c.contact_name||'')}" onchange="updateClientField(${c.id},'contact_name',this.value)" style="${iS};margin-bottom:8px;position:relative;z-index:201" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
+          <input placeholder="\uD83D\uDC64 Responsable..." value="${escHtml(c.contact_name||'')}" onchange="updateClientField(${c.id},'contact_name',this.value)" style="${iS};margin-bottom:8px" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
           <div style="display:flex;gap:6px;margin-bottom:8px">
-            <input placeholder="\uD83D\uDCF8 Instagram" value="${escHtml(c.instagram||'')}" onchange="updateClientField(${c.id},'instagram',this.value)" style="${iS};position:relative;z-index:201" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
-            <input placeholder="\uD83D\uDCF1 Facebook" value="${escHtml(c.facebook||'')}" onchange="updateClientField(${c.id},'facebook',this.value)" style="${iS};position:relative;z-index:201" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
+            <input placeholder="\uD83D\uDCF8 Instagram" value="${escHtml(c.instagram||'')}" onchange="updateClientField(${c.id},'instagram',this.value)" style="${iS}" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
+            <input placeholder="\uD83D\uDCF1 Facebook" value="${escHtml(c.facebook||'')}" onchange="updateClientField(${c.id},'facebook',this.value)" style="${iS}" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
           </div>
-          <textarea placeholder="Notes..." onblur="updateClientField(${c.id},'delivery_notes',this.value)" style="${iS};min-height:50px;resize:none;font-family:inherit;margin-bottom:8px;position:relative;z-index:201" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">${escHtml(c.delivery_notes||'')}</textarea>
+          <textarea placeholder="Notes..." onblur="updateClientField(${c.id},'delivery_notes',this.value)" style="${iS};min-height:50px;resize:none;font-family:inherit;margin-bottom:8px" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">${escHtml(c.delivery_notes||'')}</textarea>
           <div style="display:flex;justify-content:space-between;align-items:center">
             <span style="font-size:10px;color:rgba(255,255,255,.2)">${days===0?"Aujourd'hui":"il y a "+days+"j"} \u00b7 ${escHtml(c.vendor_name||'')}</span>
             <span style="font-family:monospace;font-size:12px;font-weight:700;color:#fbbf24">${c.sale_price||500}\u20AC</span>
@@ -2554,6 +2526,24 @@ async function renderClients(container){
 
   html+=`</div></div>`;
   container.innerHTML=html;
+
+  // 3D tilt on client cards (like uiverse 00Kubi)
+  container.querySelectorAll('.cc-wrap').forEach(wrap=>{
+    const card=wrap.querySelector('.cc-card');
+    wrap.addEventListener('mousemove',e=>{
+      const rect=wrap.getBoundingClientRect();
+      const x=(e.clientX-rect.left)/rect.width;
+      const y=(e.clientY-rect.top)/rect.height;
+      const rotY=(x-.5)*20;  // -10 to +10 deg
+      const rotX=(y-.5)*-20; // +10 to -10 deg
+      card.style.transition='125ms ease-in-out';
+      card.style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    });
+    wrap.addEventListener('mouseleave',()=>{
+      card.style.transition='700ms';
+      card.style.transform='rotateX(0) rotateY(0)';
+    });
+  });
 }
 
 async function hideClient(id){
