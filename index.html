@@ -1675,10 +1675,24 @@ async function assignProspectsToProject(project){
   const{error:upErr}=await sb.from('prospects').update({vendeur:vendor,updated_at:new Date().toISOString()}).in('id',ids);
   if(upErr)console.error('Prospect update error:',upErr);
 
-  // Create client records in batches of 50
+  // Filter out prospects that already have a client record (avoid duplicates)
+  const{data:existingClients}=await sb.from('clients').select('prospect_id').in('prospect_id',ids);
+  const existingPids=new Set((existingClients||[]).map(c=>c.prospect_id));
+  const newProspects=prospects.filter(p=>!existingPids.has(p.id));
+  if(!newProspects.length){showToast('Info','Tous les prospects ont deja un client','var(--accent)');
+    const{data:freshClients}=await sb.from('clients').select('*').order('created_at',{ascending:false});
+    if(freshClients)CLIENTS=freshClients;return}
+
+  // Link existing clients to this project (without changing their status)
+  if(existingClients&&existingClients.length){
+    const ePids=existingClients.map(c=>c.prospect_id);
+    await sb.from('clients').update({project_id:project.id,updated_at:new Date().toISOString()}).in('prospect_id',ePids).is('project_id',null);
+  }
+
+  // Create client records in batches of 50 (only for NEW prospects)
   let inserted=0;
-  for(let i=0;i<prospects.length;i+=50){
-    const batch=prospects.slice(i,i+50).map(p=>({
+  for(let i=0;i<newProspects.length;i+=50){
+    const batch=newProspects.slice(i,i+50).map(p=>({
       prospect_id:p.id,business_name:p.nom||'Inconnu',phone:p.numero||'',vendor_name:vendor,
       site_status:'nouveau',sale_price:500,region:p.region||'',famille:p.famille||'',
       email:p.email||'',instagram:p.instagram||'',facebook:p.facebook||'',
@@ -1694,7 +1708,7 @@ async function assignProspectsToProject(project){
       if(mErr)console.error('Minimal batch also failed:',mErr);
       else inserted+=minBatch.length;
     }else{inserted+=batch.length}
-    if(i+50<prospects.length)await new Promise(r=>setTimeout(r,100));
+    if(i+50<newProspects.length)await new Promise(r=>setTimeout(r,100));
   }
 
   console.log('Created',inserted,'client records for project',project.name);
@@ -3108,13 +3122,17 @@ async function restoreFromBlacklist(blId,prospectId){
 async function autoCreateClientForVendor(prospect,vendeur){
   console.log('autoCreateClientForVendor called:',prospect.nom,vendeur,prospect.id);
   // Check if client already exists for THIS specific prospect
-  const{data:existing}=await sb.from('clients').select('id,hidden_by').eq('prospect_id',prospect.id).maybeSingle();
+  const{data:existing}=await sb.from('clients').select('id,hidden_by,site_status').eq('prospect_id',prospect.id).maybeSingle();
   if(existing){
     // Clear hidden_by so card reappears + update vendor
     const newHidden=(existing.hidden_by||[]).filter(v=>v!==vendeur);
-    await sb.from('clients').update({vendor_name:vendeur,hidden_by:newHidden,site_status:'nouveau',updated_at:new Date().toISOString()}).eq('id',existing.id);
+    // Don't reset status if already won/maintenance
+    const safeStatuses=['gagne','maintenance','Delivered'];
+    const updateObj={vendor_name:vendeur,hidden_by:newHidden,updated_at:new Date().toISOString()};
+    if(!existing.site_status||!safeStatuses.includes(existing.site_status))updateObj.site_status='nouveau';
+    await sb.from('clients').update(updateObj).eq('id',existing.id);
     const local=CLIENTS.find(c=>c.id===existing.id);
-    if(local){local.vendor_name=vendeur;local.hidden_by=newHidden;local.site_status='nouveau'}
+    if(local){local.vendor_name=vendeur;local.hidden_by=newHidden;if(updateObj.site_status)local.site_status=updateObj.site_status}
     return;
   }
   // Create new client
