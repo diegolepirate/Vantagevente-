@@ -1549,7 +1549,7 @@ async function renderProjects(container){
 
       <div style="margin-bottom:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6)">\uD83D\uDCDE Appels</span>
+          <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;gap:4px"><img src="assets/game-icons/icon-appels.png" width="20" height="20" style="object-fit:contain"> Appels</span>
           <span style="font-size:12px;font-weight:700;color:${progColor(callPct)}">${s.called}/${s.total} — ${callPct}%</span>
         </div>
         <div style="height:8px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden"><div style="height:100%;width:${callPct}%;background:linear-gradient(90deg,${progColor(callPct)},${progColor(callPct)}cc);border-radius:8px;transition:width 1s;box-shadow:0 0 8px ${progColor(callPct)}66"></div></div>
@@ -1557,7 +1557,7 @@ async function renderProjects(container){
 
       <div style="margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6)">\uD83D\uDCB0 Ventes</span>
+          <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;gap:4px"><img src="assets/game-icons/icon-ventes.png" width="20" height="20" style="object-fit:contain"> Ventes</span>
           <span style="font-size:12px;font-weight:700;color:${progColor(salesPct)}">${s.won}/${targetSales} — ${salesPct}%</span>
         </div>
         <div style="height:8px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden"><div style="height:100%;width:${salesPct}%;background:linear-gradient(90deg,${progColor(salesPct)},${progColor(salesPct)}cc);border-radius:8px;transition:width 1s;box-shadow:0 0 8px ${progColor(salesPct)}66"></div></div>
