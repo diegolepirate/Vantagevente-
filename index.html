@@ -2331,7 +2331,7 @@ function renderScriptsContent(container){
   let html=`<div class="scripts-wrap">
     <div class="scripts-header">
       <h2 style="font-size:1.1rem;font-weight:800">Mes Scripts <span style="color:var(--accent)">(${myScripts.length})</span></h2>
-      <button class="btn btn-accent" onclick="openScriptModal()">+ Nouveau Script</button>
+      <button class="btn-newproj" onclick="openScriptModal()">+ Nouveau Script</button>
     </div>
     <div class="scripts-masonry">`;
 
@@ -2440,7 +2440,7 @@ function renderRemindersContent(container){
   let html=`<div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <h2 style="font-size:1.1rem;font-weight:800">Rappels <span style="color:var(--accent)">(${sorted.length})</span></h2>
-      <button onclick="openCreateReminderModal()" style="background:linear-gradient(135deg,#d946ef,#7c3aed);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:700;font-size:.8rem;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,.3)">+ Creer un rappel</button>
+      <button class="btn-newproj" onclick="openCreateReminderModal()">+ Creer un rappel</button>
     </div>`;
 
   if(!sorted.length){
