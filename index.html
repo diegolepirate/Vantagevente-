@@ -156,6 +156,55 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .select-btn:hover:not([data-selected="true"]):not(:disabled) .btn-fill{transform:scaleX(0.3)!important}
 .cl-card select,.cl-card select option{background:#1a1035!important;color:#fff!important}
 .cl-card input,.cl-card textarea{background:rgba(255,255,255,.04)!important;color:#fff!important}
+
+/* Cyberpunk card from uiverse.io — adapted */
+.cyber-card-wrap{position:relative;width:100%;aspect-ratio:auto;cursor:default}
+.cyber-card-wrap .canvas{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:14px}
+.cyber-card-wrap .canvas>div{position:absolute;background:rgba(168,85,247,.03);border-radius:50%;filter:blur(6px);opacity:0;transition:opacity .6s}
+.cyber-card-wrap:hover .canvas>div{opacity:1}
+.cyber-card-wrap .canvas .tr-1{width:60px;height:60px;top:5%;left:10%}.cyber-card-wrap .canvas .tr-2{width:45px;height:45px;top:15%;right:15%}.cyber-card-wrap .canvas .tr-3{width:35px;height:35px;bottom:20%;left:20%}.cyber-card-wrap .canvas .tr-4{width:50px;height:50px;bottom:10%;right:10%}.cyber-card-wrap .canvas .tr-5{width:30px;height:30px;top:40%;left:5%}
+
+.cyber-card{position:relative;border-radius:14px;background:linear-gradient(135deg,#1a1035 0%,#1f0042 50%,#1a1035 100%);border:1px solid rgba(168,85,247,.15);overflow:hidden;transition:transform .3s,box-shadow .3s,border-color .3s}
+.cyber-card:hover{transform:translateY(-4px);box-shadow:0 0 20px rgba(232,121,249,.12),0 0 40px rgba(168,85,247,.06);border-color:rgba(232,121,249,.3)}
+
+.cyber-card .cyber-lines span{position:absolute;background:linear-gradient(90deg,transparent,rgba(232,121,249,.08),transparent);pointer-events:none}
+.cyber-card .cyber-lines span:nth-child(1){top:25%;left:0;right:0;height:1px}
+.cyber-card .cyber-lines span:nth-child(2){top:50%;left:0;right:0;height:1px}
+.cyber-card .cyber-lines span:nth-child(3){top:75%;left:0;right:0;height:1px}
+.cyber-card .cyber-lines span:nth-child(4){top:0;bottom:0;left:50%;width:1px;background:linear-gradient(180deg,transparent,rgba(232,121,249,.06),transparent)}
+
+.cyber-card .corner-elements span{position:absolute;width:8px;height:8px;border:1px solid rgba(232,121,249,.25);pointer-events:none;transition:border-color .3s}
+.cyber-card:hover .corner-elements span{border-color:rgba(232,121,249,.5)}
+.cyber-card .corner-elements span:nth-child(1){top:6px;left:6px;border-right:none;border-bottom:none}
+.cyber-card .corner-elements span:nth-child(2){top:6px;right:6px;border-left:none;border-bottom:none}
+.cyber-card .corner-elements span:nth-child(3){bottom:6px;left:6px;border-right:none;border-top:none}
+.cyber-card .corner-elements span:nth-child(4){bottom:6px;right:6px;border-left:none;border-top:none}
+
+.cyber-card .scan-line{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(232,121,249,.3),transparent);opacity:0;pointer-events:none}
+.cyber-card:hover .scan-line{animation:cyberScan 2s linear infinite}
+@keyframes cyberScan{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
+
+.cyber-card .glowing-elements{pointer-events:none}
+.cyber-card .glow-1,.cyber-card .glow-2,.cyber-card .glow-3{position:absolute;border-radius:50%;filter:blur(25px);opacity:0;transition:opacity .6s}
+.cyber-card:hover .glow-1,.cyber-card:hover .glow-2,.cyber-card:hover .glow-3{opacity:1}
+.cyber-card .glow-1{width:60px;height:60px;background:rgba(232,121,249,.1);top:-10px;right:-10px}
+.cyber-card .glow-2{width:40px;height:40px;background:rgba(103,232,249,.08);bottom:10px;left:10px}
+.cyber-card .glow-3{width:50px;height:50px;background:rgba(168,85,247,.08);top:50%;left:50%;transform:translate(-50%,-50%)}
+
+.cyber-card .card-particles span{position:absolute;width:2px;height:2px;background:rgba(232,121,249,.4);border-radius:50%;opacity:0;pointer-events:none}
+.cyber-card:hover .card-particles span{animation:cyberFloat 3s ease-in-out infinite}
+.cyber-card .card-particles span:nth-child(1){top:20%;left:15%;animation-delay:0s}
+.cyber-card .card-particles span:nth-child(2){top:60%;right:20%;animation-delay:.5s}
+.cyber-card .card-particles span:nth-child(3){bottom:15%;left:40%;animation-delay:1s}
+.cyber-card .card-particles span:nth-child(4){top:40%;right:10%;animation-delay:1.5s}
+.cyber-card .card-particles span:nth-child(5){bottom:30%;left:10%;animation-delay:2s}
+.cyber-card .card-particles span:nth-child(6){top:10%;left:60%;animation-delay:2.5s}
+@keyframes cyberFloat{0%,100%{transform:translateY(0);opacity:0}50%{transform:translateY(-8px);opacity:1}}
+
+.cyber-card .card-glare{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.03) 0%,transparent 50%,rgba(255,255,255,.01) 100%);pointer-events:none;opacity:0;transition:opacity .3s}
+.cyber-card:hover .card-glare{opacity:1}
+
+.cyber-card .card-content{position:relative;z-index:1;padding:16px}
 .ninp{width:100%;min-width:100px;padding:3px 6px;background:var(--bg);border:1px solid rgba(255,255,255,.04);border-radius:4px;color:var(--white);font-size:.7rem;outline:none;transition:.2s}.ninp:focus{border-color:var(--yellow)}
 
 /* ====== PIPELINE ====== */
@@ -2431,27 +2480,38 @@ async function renderClients(container){
     const days=Math.floor((Date.now()-new Date(c.created_at||c.sold_at))/(1000*60*60*24));
     const sOpts=statusOpts(c.site_status);
 
-    html+=`<div class="cl-card" style="background:#1a1035;border:1px solid ${sc.border};border-radius:14px;padding:16px;position:relative"
+    html+=`<div class="cyber-card-wrap cl-card"
       onmouseenter="var b=this.querySelector('.rm-b');if(b)b.style.opacity='1'"
       onmouseleave="var b=this.querySelector('.rm-b');if(b)b.style.opacity='0'">
-      <button class="rm-b" onclick="event.stopPropagation();hideClient(${c.id})" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:12px;cursor:pointer;opacity:0;transition:opacity .2s;line-height:1;display:flex;align-items:center;justify-content:center">\u2715</button>
-      <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;padding-right:24px">${escHtml(c.business_name||'')}</div>
-      <span style="font-size:10px;font-weight:700;color:${sc.color};margin-bottom:10px;display:inline-block">${sc.label}</span>
-      <select onchange="updateClientField(${c.id},'site_status',this.value)" style="width:100%;background:#1a1035;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;margin-bottom:10px;outline:none;cursor:pointer;box-sizing:border-box">${sOpts}</select>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-        ${c.phone?`<div style="font-family:monospace;font-size:11px;color:#a78bfa">\uD83D\uDCDE ${escHtml(c.phone)}</div>`:''}
-        ${c.email?`<div style="font-size:11px;color:rgba(255,255,255,.4)">\uD83D\uDCE7 ${escHtml(c.email)}</div>`:''}
-        ${c.region?`<div style="font-size:10px;color:rgba(255,255,255,.25)">\uD83D\uDCCD ${escHtml(c.region)}</div>`:''}
-      </div>
-      <input placeholder="\uD83D\uDC64 Responsable..." value="${escHtml(c.contact_name||'')}" onchange="updateClientField(${c.id},'contact_name',this.value)" style="${iS};margin-bottom:8px" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
-      <div style="display:flex;gap:6px;margin-bottom:8px">
-        <input placeholder="\uD83D\uDCF8 Instagram" value="${escHtml(c.instagram||'')}" onchange="updateClientField(${c.id},'instagram',this.value)" style="${iS}" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
-        <input placeholder="\uD83D\uDCF1 Facebook" value="${escHtml(c.facebook||'')}" onchange="updateClientField(${c.id},'facebook',this.value)" style="${iS}" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
-      </div>
-      <textarea placeholder="Notes..." onblur="updateClientField(${c.id},'delivery_notes',this.value)" style="${iS};min-height:50px;resize:none;font-family:inherit;margin-bottom:8px" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">${escHtml(c.delivery_notes||'')}</textarea>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:10px;color:rgba(255,255,255,.2)">${days===0?"Aujourd'hui":"il y a "+days+"j"} \u00b7 ${escHtml(c.vendor_name||'')}</span>
-        <span style="font-family:monospace;font-size:12px;font-weight:700;color:#fbbf24">${c.sale_price||500}\u20AC</span>
+      <div class="canvas"><div class="tr-1"></div><div class="tr-2"></div><div class="tr-3"></div><div class="tr-4"></div><div class="tr-5"></div></div>
+      <div class="cyber-card" style="border-color:${sc.border}">
+        <div class="cyber-lines"><span></span><span></span><span></span><span></span></div>
+        <div class="corner-elements"><span></span><span></span><span></span><span></span></div>
+        <div class="scan-line"></div>
+        <div class="glowing-elements"><div class="glow-1"></div><div class="glow-2"></div><div class="glow-3"></div></div>
+        <div class="card-particles"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="card-glare"></div>
+        <div class="card-content">
+          <button class="rm-b" onclick="event.stopPropagation();hideClient(${c.id})" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:12px;cursor:pointer;opacity:0;transition:opacity .2s;line-height:1;display:flex;align-items:center;justify-content:center;z-index:2">\u2715</button>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;padding-right:24px">${escHtml(c.business_name||'')}</div>
+          <span style="font-size:10px;font-weight:700;color:${sc.color};margin-bottom:10px;display:inline-block">${sc.label}</span>
+          <select onchange="updateClientField(${c.id},'site_status',this.value)" style="width:100%;background:#1a1035;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;margin-bottom:10px;outline:none;cursor:pointer;box-sizing:border-box">${sOpts}</select>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+            ${c.phone?`<div style="font-family:monospace;font-size:11px;color:#a78bfa">\uD83D\uDCDE ${escHtml(c.phone)}</div>`:''}
+            ${c.email?`<div style="font-size:11px;color:rgba(255,255,255,.4)">\uD83D\uDCE7 ${escHtml(c.email)}</div>`:''}
+            ${c.region?`<div style="font-size:10px;color:rgba(255,255,255,.25)">\uD83D\uDCCD ${escHtml(c.region)}</div>`:''}
+          </div>
+          <input placeholder="\uD83D\uDC64 Responsable..." value="${escHtml(c.contact_name||'')}" onchange="updateClientField(${c.id},'contact_name',this.value)" style="${iS};margin-bottom:8px" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <input placeholder="\uD83D\uDCF8 Instagram" value="${escHtml(c.instagram||'')}" onchange="updateClientField(${c.id},'instagram',this.value)" style="${iS}" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
+            <input placeholder="\uD83D\uDCF1 Facebook" value="${escHtml(c.facebook||'')}" onchange="updateClientField(${c.id},'facebook',this.value)" style="${iS}" onfocus="this.style.borderColor='rgba(167,139,250,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">
+          </div>
+          <textarea placeholder="Notes..." onblur="updateClientField(${c.id},'delivery_notes',this.value)" style="${iS};min-height:50px;resize:none;font-family:inherit;margin-bottom:8px" onfocus="this.style.borderColor='rgba(232,121,249,.3)'" onblur="this.style.borderColor='rgba(255,255,255,.07)'">${escHtml(c.delivery_notes||'')}</textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:10px;color:rgba(255,255,255,.2)">${days===0?"Aujourd'hui":"il y a "+days+"j"} \u00b7 ${escHtml(c.vendor_name||'')}</span>
+            <span style="font-family:monospace;font-size:12px;font-weight:700;color:#fbbf24">${c.sale_price||500}\u20AC</span>
+          </div>
+        </div>
       </div>
     </div>`;
   });
