@@ -328,7 +328,7 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .leaderboard-wrap{padding:20px 24px}
 .lb-card{background:rgba(22,27,34,0.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(88,166,255,0.15);border-radius:16px;padding:20px 24px;margin-bottom:12px;display:flex;align-items:center;gap:20px;transition:all .25s}
 .lb-card:hover{border-color:var(--accent)}
-.lb-card.rank-1{border-color:var(--yellow);background:rgba(210,153,34,.04);box-shadow:0 0 20px rgba(210,153,34,.1);min-height:420px;padding:20px 24px;flex-wrap:wrap;justify-content:center;align-content:center}
+.lb-card.rank-1{border-color:var(--yellow);background:rgba(210,153,34,.04);box-shadow:0 0 20px rgba(210,153,34,.1);min-height:420px;padding:0;flex-direction:column;align-items:center}
 .lb-rank{font-size:1.8rem;font-weight:800;min-width:50px;text-align:center;color:var(--gray);opacity:0;width:0;min-width:0;overflow:hidden;padding:0;margin:0}
 .lb-rank.r1{color:var(--yellow)}.lb-rank.r2{color:var(--gray)}.lb-rank.r3{color:var(--orange)}
 .lb-name{font-size:1.33rem;font-weight:900;flex:1;text-align:center;font-family:'Alpino',sans-serif;letter-spacing:.5px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
@@ -2045,18 +2045,29 @@ async function renderLeaderboard(container){
     const crown=rank===1?' <img src="assets/game-icons/icon-crown.png" width="144" height="144" style="object-fit:contain;vertical-align:middle">':'';
     const isMe=r.name===currentUser;
     html+=`<div class="lb-card ${rank===1?'rank-1':''}" style="position:relative;overflow:hidden;${isMe?'border-color:var(--green);box-shadow:0 0 16px rgba(52,211,153,.15)':''}">
-      ${rank===1?`<div style="position:absolute;inset:0;z-index:0"><img src="assets/game-icons/bg-rank1.png" style="width:100%;height:100%;object-fit:cover;object-position:center 35%"></div><div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(13,17,23,.5) 0%,rgba(13,17,23,.25) 50%,rgba(13,17,23,.5) 100%);z-index:0"></div>`:''}
-      <div class="lb-rank r${rank}" style="position:relative;z-index:1">#${rank}</div>
+      ${rank===1?`<div style="position:absolute;inset:0;z-index:0"><img src="assets/game-icons/bg-rank1.png" style="width:100%;height:100%;object-fit:cover;object-position:center 35%"></div><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,17,23,.15) 0%,rgba(13,17,23,.1) 60%,rgba(13,17,23,.85) 100%);z-index:0"></div>
+      <div style="position:relative;z-index:1;padding:20px 24px;text-align:center">
+        <div class="lb-name" style="font-size:1.5rem;text-shadow:0 2px 10px rgba(0,0,0,.9)">${getDisplayName(r.name)}${crown}${getStreakIcon(r.name)}${isMe?' <span style="font-size:.6rem;color:var(--green);opacity:.7">(vous)</span>':''}</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="position:relative;z-index:1;width:100%;padding:16px 24px 20px;display:flex;gap:24px;flex-wrap:wrap;justify-content:center">
+        <div class="lb-stat"><div class="lb-stat-val" style="color:var(--yellow);text-shadow:0 1px 6px rgba(0,0,0,.8)">${r.points}</div><div class="lb-stat-lbl">Points</div></div>
+        <div class="lb-stat"><div class="lb-stat-val" style="color:var(--accent);text-shadow:0 1px 6px rgba(0,0,0,.8)">${r.calls}</div><div class="lb-stat-lbl">Appels</div></div>
+        <div class="lb-stat"><div class="lb-stat-val" style="color:var(--green);text-shadow:0 1px 6px rgba(0,0,0,.8)">${r.wins}</div><div class="lb-stat-lbl">Gagn\u00e9s</div></div>
+        <div class="lb-stat"><div class="lb-stat-val" style="color:var(--red);text-shadow:0 1px 6px rgba(0,0,0,.8)">${r.lost}</div><div class="lb-stat-lbl">Perdus</div></div>
+        <div class="lb-stat"><div class="lb-stat-val" style="color:#34d399;font-weight:900;text-shadow:0 1px 6px rgba(0,0,0,.8)">${r.earnings.toLocaleString()}\u20ac</div><div class="lb-stat-lbl">Gains</div></div>
+        <div class="lb-stat"><div class="lb-stat-val" style="color:var(--purple);text-shadow:0 1px 6px rgba(0,0,0,.8)">${r.conv}%</div><div class="lb-stat-lbl">Conv.</div></div>
+      </div>`:''}
+      ${rank!==1?`<div class="lb-rank r${rank}" style="position:relative;z-index:1">#${rank}</div>
       <div class="lb-name" style="position:relative;z-index:1">${getDisplayName(r.name)}${crown}${getStreakIcon(r.name)}${isMe?' <span style="font-size:.6rem;color:var(--green);opacity:.7">(vous)</span>':''}</div>
-      <div class="lb-stats" style="position:relative;z-index:1;justify-content:center">
+      <div class="lb-stats" style="position:relative;z-index:1">
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--yellow)">${r.points}</div><div class="lb-stat-lbl">Points</div></div>
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--accent)">${r.calls}</div><div class="lb-stat-lbl">Appels</div></div>
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--green)">${r.wins}</div><div class="lb-stat-lbl">Gagn\u00e9s</div></div>
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--red)">${r.lost}</div><div class="lb-stat-lbl">Perdus</div></div>
         <div class="lb-stat"><div class="lb-stat-val" style="color:#34d399;font-weight:900">${r.earnings.toLocaleString()}\u20ac</div><div class="lb-stat-lbl">Gains</div></div>
         <div class="lb-stat"><div class="lb-stat-val" style="color:var(--purple)">${r.conv}%</div><div class="lb-stat-lbl">Conv.</div></div>
-      </div>
-    </div>`;
+      </div>`:''}
   });
 
   html+=`</div>`;
