@@ -123,20 +123,12 @@ input,select,textarea,button{font-family:'Inter',sans-serif}
 .cnt{font-size:.72rem;color:var(--gray);margin-left:auto}.cnt b{color:var(--accent)}
 
 /* ====== TOGGLE BUTTONS (Free/Assigned/Mine) ====== */
-.toggle-group{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--s3)}
-.toggle-btn{cursor:pointer;position:relative;padding:2px;border-radius:6px;border:0;text-shadow:1px 1px #000a;background:linear-gradient(#006caa,#00c3ff);box-shadow:0px 4px 6px 0px #0008;transition:.3s all;font-size:.68rem;font-weight:600;color:#fff;white-space:nowrap}
-.toggle-btn:hover{box-shadow:0px 6px 12px 0px #0009}
-.toggle-btn:active{box-shadow:0px 0px 0px 0px #0000}
-.toggle-btn .tb-inner{position:relative;padding:6px 14px;border-radius:4px;background:radial-gradient(circle at 50% 100%,#30f8f8 10%,#30f8f800 55%),linear-gradient(#00526a,#009dcd);overflow:hidden;transition:inherit}
-.toggle-btn .tb-inner::before{content:"";position:absolute;inset:0;background:linear-gradient(-65deg,#0000 40%,#fff7 50%,#0000 70%);background-size:200% 100%;background-repeat:no-repeat;animation:frutigerShine 3s ease infinite}
-.toggle-btn .tb-inner::after{content:"";position:absolute;inset:0;border-radius:inherit;transition:inherit;box-shadow:inset 0px 2px 8px -2px #0000}
-.toggle-btn:active .tb-inner::after{box-shadow:inset 0px 2px 8px -2px #000a}
-.toggle-btn .tb-white{position:absolute;border-radius:inherit;inset:0 -8em;background:radial-gradient(circle at 50% -270%,#fff 45%,#fff6 60%,#fff0 60%);transition:inherit}
-.toggle-btn.active{background:linear-gradient(#004a7a,#0090dd);box-shadow:0px 4px 8px 0px rgba(0,150,255,.4)}
-.toggle-btn.active .tb-inner{background:radial-gradient(circle at 50% 100%,#60ffff 10%,#30f8f800 55%),linear-gradient(#003a5a,#007aad)}
-.toggle-btn .cnt-badge{font-size:.55rem;background:rgba(0,0,0,.3);padding:1px 5px;border-radius:8px;margin-left:4px;position:relative;z-index:1}
-.toggle-btn .tb-text{position:relative;z-index:1}
-@keyframes frutigerShine{0%{background-position:130%;opacity:1}to{background-position:-166%;opacity:0}}
+.toggle-group{display:flex;gap:16px;align-items:center}
+.toggle-btn{margin:0;height:auto;background:transparent;padding:0;border:none;cursor:pointer;--border-right:6px;--text-stroke-color:rgba(255,255,255,0.6);--animation-color:#37FF8B;--fs-size:1em;letter-spacing:3px;text-decoration:none;font-size:var(--fs-size);font-family:"Arial";position:relative;text-transform:uppercase;color:transparent;-webkit-text-stroke:1px var(--text-stroke-color);white-space:nowrap}
+.toggle-btn .hover-text{position:absolute;box-sizing:border-box;color:var(--animation-color);width:0%;inset:0;border-right:var(--border-right) solid var(--animation-color);overflow:hidden;transition:0.5s;-webkit-text-stroke:1px var(--animation-color);white-space:nowrap}
+.toggle-btn:hover .hover-text{width:100%;filter:drop-shadow(0 0 23px var(--animation-color))}
+.toggle-btn.active{color:var(--animation-color);-webkit-text-stroke:1px var(--animation-color);filter:drop-shadow(0 0 12px var(--animation-color))}
+.toggle-btn .cnt-badge{font-size:.55rem;background:rgba(255,255,255,.15);padding:1px 5px;border-radius:8px;margin-left:4px}
 
 /* ====== TABLE ====== */
 .table-wrap{padding:0 24px 24px;overflow-x:auto}.table-wrap table{table-layout:auto}.table-wrap tbody tr{transition:background .15s ease,opacity .15s ease}
@@ -1319,10 +1311,10 @@ async function renderProspects(container){
   // Owner toggle + Controls
   html+=`<div class="controls">
     <div class="toggle-group">
-      <button class="toggle-btn${ownerFilter==='all'?' active':''}" onclick="setOwnerFilter('all')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Tous <span class="cnt-badge">${counts.all}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='free'?' active':''}" onclick="setOwnerFilter('free')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Libres <span class="cnt-badge">${counts.free}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='assigned'?' active':''}" onclick="setOwnerFilter('assigned')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Assignes <span class="cnt-badge">${counts.assigned}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='mine'?' active':''}" onclick="setOwnerFilter('mine')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Les Miens <span class="cnt-badge">${counts.mine}</span></span></span></button>
+      <button class="toggle-btn${ownerFilter==='all'?' active':''}" onclick="setOwnerFilter('all')">Tous <span class="cnt-badge">${counts.all}</span><span class="hover-text">Tous <span class="cnt-badge">${counts.all}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='free'?' active':''}" onclick="setOwnerFilter('free')">Libres <span class="cnt-badge">${counts.free}</span><span class="hover-text">Libres <span class="cnt-badge">${counts.free}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='assigned'?' active':''}" onclick="setOwnerFilter('assigned')">Assignes <span class="cnt-badge">${counts.assigned}</span><span class="hover-text">Assignes <span class="cnt-badge">${counts.assigned}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='mine'?' active':''}" onclick="setOwnerFilter('mine')">Les Miens <span class="cnt-badge">${counts.mine}</span><span class="hover-text">Les Miens <span class="cnt-badge">${counts.mine}</span></span></button>
     </div>
     <div style="flex:1"></div>
     ${multiSelectHtml('mselFam',families,selectedFamilles,function(){reloadAndRender()},false)}
@@ -1432,10 +1424,10 @@ async function renderPipeline(container){
   // Show skeleton immediately
   let skelHtml=`<div class="controls">
     <div class="toggle-group">
-      <button class="toggle-btn${ownerFilter==='all'?' active':''}" onclick="setOwnerFilter('all')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Tous <span class="cnt-badge">${counts.all}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='free'?' active':''}" onclick="setOwnerFilter('free')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Libres <span class="cnt-badge">${counts.free}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='assigned'?' active':''}" onclick="setOwnerFilter('assigned')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Assignes <span class="cnt-badge">${counts.assigned}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='mine'?' active':''}" onclick="setOwnerFilter('mine')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Les Miens <span class="cnt-badge">${counts.mine}</span></span></span></button>
+      <button class="toggle-btn${ownerFilter==='all'?' active':''}" onclick="setOwnerFilter('all')">Tous <span class="cnt-badge">${counts.all}</span><span class="hover-text">Tous <span class="cnt-badge">${counts.all}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='free'?' active':''}" onclick="setOwnerFilter('free')">Libres <span class="cnt-badge">${counts.free}</span><span class="hover-text">Libres <span class="cnt-badge">${counts.free}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='assigned'?' active':''}" onclick="setOwnerFilter('assigned')">Assignes <span class="cnt-badge">${counts.assigned}</span><span class="hover-text">Assignes <span class="cnt-badge">${counts.assigned}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='mine'?' active':''}" onclick="setOwnerFilter('mine')">Les Miens <span class="cnt-badge">${counts.mine}</span><span class="hover-text">Les Miens <span class="cnt-badge">${counts.mine}</span></span></button>
     </div>
     ${regionPickerHtml('pipeReg',pipelineRegionFilter,function(){pipelineRegionFilter=document.getElementById('pipeReg').value;render()})}
   </div><div class="pipeline">`;
@@ -1457,10 +1449,10 @@ async function renderPipeline(container){
 
   let html=`<div class="controls">
     <div class="toggle-group">
-      <button class="toggle-btn${ownerFilter==='all'?' active':''}" onclick="setOwnerFilter('all')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Tous <span class="cnt-badge">${counts.all}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='free'?' active':''}" onclick="setOwnerFilter('free')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Libres <span class="cnt-badge">${counts.free}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='assigned'?' active':''}" onclick="setOwnerFilter('assigned')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Assignes <span class="cnt-badge">${counts.assigned}</span></span></span></button>
-      <button class="toggle-btn${ownerFilter==='mine'?' active':''}" onclick="setOwnerFilter('mine')"><span class="tb-inner"><span class="tb-white"></span><span class="tb-text">Les Miens <span class="cnt-badge">${counts.mine}</span></span></span></button>
+      <button class="toggle-btn${ownerFilter==='all'?' active':''}" onclick="setOwnerFilter('all')">Tous <span class="cnt-badge">${counts.all}</span><span class="hover-text">Tous <span class="cnt-badge">${counts.all}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='free'?' active':''}" onclick="setOwnerFilter('free')">Libres <span class="cnt-badge">${counts.free}</span><span class="hover-text">Libres <span class="cnt-badge">${counts.free}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='assigned'?' active':''}" onclick="setOwnerFilter('assigned')">Assignes <span class="cnt-badge">${counts.assigned}</span><span class="hover-text">Assignes <span class="cnt-badge">${counts.assigned}</span></span></button>
+      <button class="toggle-btn${ownerFilter==='mine'?' active':''}" onclick="setOwnerFilter('mine')">Les Miens <span class="cnt-badge">${counts.mine}</span><span class="hover-text">Les Miens <span class="cnt-badge">${counts.mine}</span></span></button>
     </div>
     ${regionPickerHtml('pipeRegAdmin',pipelineRegionFilter,function(){pipelineRegionFilter=document.getElementById('pipeRegAdmin').value;render()})}
   </div>`;
