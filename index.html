@@ -1536,7 +1536,8 @@ async function renderProjects(container){
     const _pSize=getSizeBadge(REGION_COUNTS[p.region]||0);
     const _isGrand=_pSize.label==='GRAND';
     const _isGeant=_pSize.label==='GÉANT';
-    const _bgImg=_isGeant?'bg-geant.png':(_isGrand?'bg-grand.png':'');
+    const _isPetit=_pSize.label==='PETIT';
+    const _bgImg=_isGeant?'bg-geant.png':(_isGrand?'bg-grand.png':(_isPetit?'bg-petit.png':''));
     html+=`<div style="background:#1a1035;border:1px solid rgba(232,121,249,.2);border-radius:16px;padding:20px;position:relative;overflow:hidden${_bgImg?';background:url(assets/game-icons/'+_bgImg+') center/cover no-repeat':''}">
       ${_bgImg?'<div style="position:absolute;inset:0;background:rgba(26,16,53,.75);z-index:0"></div>':''}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;position:relative;z-index:1">
