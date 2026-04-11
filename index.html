@@ -3716,13 +3716,14 @@ async function calculateMyEarnings(){
 // POINTS SYSTEM
 // ========================================
 function calcPoints(vendor){
-  const vd=DATA.filter(d=>d.vendeur===vendor);
+  // Use CLIENTS (complete) instead of DATA (paginated) for accurate stats
+  const vc=CLIENTS.filter(c=>c.vendor_name===vendor&&!(c.hidden_by||[]).includes(vendor));
   let pts=0;
-  pts+=vd.filter(d=>d.status==='appele').length*1;
-  pts+=vd.filter(d=>d.status==='negociation').length*20;
-  pts+=vd.filter(d=>d.status==='gagne').length*100;
-  pts+=vd.filter(d=>d.status==='maintenance').length*100;
-  pts+=vd.filter(d=>d.status==='rappeler').length*5;
+  pts+=vc.filter(c=>c.site_status==='appele').length*1;
+  pts+=vc.filter(c=>c.site_status==='negociation').length*20;
+  pts+=vc.filter(c=>c.site_status==='gagne').length*100;
+  pts+=vc.filter(c=>c.site_status==='maintenance').length*100;
+  pts+=vc.filter(c=>c.site_status==='rappeler').length*5;
   pts+=CALL_HISTORY.filter(c=>c.vendor===vendor).length*2;
   // Badge points
   const badges=getBadges(vendor);
@@ -3731,13 +3732,14 @@ function calcPoints(vendor){
 }
 
 function getVendorStats(vendor){
-  const vd=DATA.filter(d=>d.vendeur===vendor);
+  // Use CLIENTS (complete) instead of DATA (paginated) for accurate stats
+  const vc=CLIENTS.filter(c=>c.vendor_name===vendor&&!(c.hidden_by||[]).includes(vendor));
   const calls=CALL_HISTORY.filter(c=>c.vendor===vendor).length;
-  const wins=vd.filter(d=>d.status==='gagne'||d.status==='maintenance').length;
-  const lost=vd.filter(d=>d.status==='perdu').length;
-  const nego=vd.filter(d=>d.status==='negociation').length;
+  const wins=vc.filter(c=>c.site_status==='gagne'||c.site_status==='maintenance').length;
+  const lost=vc.filter(c=>c.site_status==='perdu').length;
+  const nego=vc.filter(c=>c.site_status==='negociation').length;
   const conv=wins+lost>0?((wins/(wins+lost))*100).toFixed(1):'0';
-  const rev=CLIENTS.filter(c=>c.vendor_name===vendor&&['gagne','Delivered','maintenance'].includes(c.site_status)).reduce((s,c)=>s+(parseFloat(c.sale_price)||500),0);
+  const rev=vc.filter(c=>['gagne','Delivered','maintenance'].includes(c.site_status)).reduce((s,c)=>s+(parseFloat(c.sale_price)||500),0);
   return{calls,wins,lost,nego,conv,rev};
 }
 
