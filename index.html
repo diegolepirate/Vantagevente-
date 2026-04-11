@@ -162,10 +162,11 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .cc-wrap:active{transform:scale(.97)}
 .cc-wrap input,.cc-wrap textarea,.cc-wrap select{-webkit-user-select:text;-moz-user-select:text;user-select:text}
 /* Gradient border wrapper (Tiagoadag technique) */
-.cc-border{background-image:linear-gradient(163deg,#e879f9 0%,#a855f7 50%,#67e8f9 100%);border-radius:20px;padding:3px;transition:all .3s;box-shadow:0 0 10px rgba(0,0,0,.3)}
-.cc-border:hover{box-shadow:0px 0px 30px 1px rgba(232,121,249,.30)}
-.cc-border:hover>.cc-card{transform:scale(0.98);border-radius:20px}
-.cc-card{position:relative;z-index:0;border-radius:18px;transition:700ms;background:linear-gradient(45deg,#1a1035,#1f0042);overflow:hidden;box-shadow:inset 0 0 20px rgba(0,0,0,.2)}
+/* Rotating gradient border (Pradeepsaranbishnoi uiverse) */
+.cc-border{position:relative;display:grid;place-items:center;overflow:hidden;border-radius:20px;box-shadow:rgba(0,0,0,.4) 0px 2px 10px 0px,rgba(0,0,0,.5) 0px 2px 25px 0px}
+.cc-border::before{content:"";position:absolute;width:100%;height:200%;background:linear-gradient(to right,#e879f9,#a855f7,#67e8f9);transform-origin:center;animation:ccGlow 5s linear infinite;z-index:1}
+@keyframes ccGlow{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.cc-card{position:relative;width:96%;margin:2%;z-index:5;border-radius:18px;transition:700ms;background:linear-gradient(45deg,#1a1035,#1f0042);overflow:hidden;box-shadow:rgba(0,0,0,.4) 0px 30px 60px -12px inset,rgba(0,0,0,.5) 0px 18px 36px -18px inset}
 .cc-card.cc-hover{transition:125ms ease-in-out;filter:brightness(1.1)}
 .cc-card .card-content{position:relative;width:100%;padding:16px;z-index:1}
 
