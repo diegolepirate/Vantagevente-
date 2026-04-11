@@ -2702,7 +2702,7 @@ async function renderClients(container){
     const days=Math.floor((Date.now()-new Date(c.created_at||c.sold_at))/(1000*60*60*24));
     const sOpts=statusOpts(c.site_status);
 
-    const _statusBg={nouveau:'bg-status-nouveau.png',appele:'bg-status-appele.png',negociation:'bg-status-negociation.png',rappeler:'bg-status-rappeler.png',gagne:'bg-status-gagne.png',perdu:'bg-status-perdu.png'};
+    const _statusBg={nouveau:'bg-status-nouveau.png',appele:'bg-status-appele.png',negociation:'bg-status-negociation.png',rappeler:'bg-status-rappeler.png',gagne:'bg-status-gagne.png',maintenance:'bg-status-maintenance.png',perdu:'bg-status-perdu.png'};
     const _sBg=_statusBg[c.site_status]||'';
     html+=`<div class="cc-wrap cl-card"
       onmouseenter="var b=this.querySelector('.rm-b');if(b)b.style.opacity='1';this.querySelector('.cc-card').classList.add('cc-hover')"
