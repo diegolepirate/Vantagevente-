@@ -1963,36 +1963,11 @@ async function renderBadges(container){
   const ROW_H={appels:[190,230],ventes:[35,55],conquete:[350,20],streak:[20,40],elite:[260,290]};
 
   let html=`<style>
-.bp-top{display:flex;align-items:center;gap:16px;padding:16px 20px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.06)}
-.bp-pbar{height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden;min-width:150px;max-width:300px;flex:1}
-.bp-pfill{height:100%;border-radius:3px;background:linear-gradient(90deg,#b8860b,#ffd700);transition:width 1s}
 .bp-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.04);padding:0 20px;overflow-x:auto;scrollbar-width:none}
 .bp-tabs::-webkit-scrollbar{display:none}
 .bp-tab{padding:10px 16px;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;color:rgba(255,255,255,.3);border-bottom:2px solid transparent;transition:.25s;white-space:nowrap}
 .bp-tab:hover{color:rgba(255,255,255,.6)}
 .bp-tab.active{color:#ffd700;border-bottom-color:#ffd700}
-.bp-sec{margin-bottom:20px;border-radius:10px;overflow:hidden;background:#0c1a30;border:1px solid rgba(255,255,255,.05)}
-.bp-hdr{display:flex;align-items:center;padding:14px 18px;gap:12px;background:linear-gradient(90deg,#1a2744,#0f1d35);border-bottom:1px solid rgba(255,255,255,.06)}
-.bp-hdr-icon{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.bp-hdr-info{flex:1}
-.bp-hdr-title{font-family:Cinzel,serif;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#fff}
-.bp-hdr-sub{font-size:.6rem;color:rgba(255,255,255,.3);margin-top:2px}
-.bp-hdr-pbar{display:flex;align-items:center;gap:8px;margin-top:5px}
-.bp-hdr-bar{flex:1;height:7px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;max-width:250px}
-.bp-hdr-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .8s}
-.bp-hdr-frac{font-size:.7rem;color:rgba(255,255,255,.45);font-weight:600}
-.bp-row{display:flex;align-items:center;padding:10px 18px;gap:10px;border-bottom:1px solid rgba(0,0,0,.15);transition:filter .2s;cursor:default}
-.bp-row:last-child{border-bottom:none}
-.bp-row:hover{filter:brightness(1.2)}
-.bp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.bp-info{flex:1;min-width:0}
-.bp-name{font-size:.73rem;font-weight:700;color:#fff}
-.bp-desc{font-size:.58rem;color:rgba(255,255,255,.28);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bp-rbar{width:110px;height:5px;background:rgba(0,0,0,.3);border-radius:3px;overflow:hidden;flex-shrink:0}
-.bp-rfill{height:100%;border-radius:3px}
-.bp-frac{font-size:.66rem;color:rgba(255,255,255,.4);font-weight:600;min-width:48px;text-align:center}
-.bp-pts{font-size:.58rem;color:#ffd700;font-weight:700;min-width:44px;text-align:right}
-.bp-chk{font-size:14px;flex-shrink:0;width:22px;text-align:center}
 .fn-sec{border-radius:10px;overflow:hidden;margin-bottom:20px;background:linear-gradient(180deg,#1e3a5c,#152d4a);border:1px solid rgba(80,140,200,.12)}
 .fn-banner{background:linear-gradient(90deg,#8B6914,#C4A35A,#8B6914);padding:5px 16px;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#fff;display:flex;align-items:center;gap:8px}
 .fn-hdr{display:flex;align-items:center;padding:14px 16px;gap:12px;background:linear-gradient(90deg,#162c48,#0e2038);border-bottom:1px solid rgba(255,255,255,.05)}
@@ -2007,7 +1982,7 @@ async function renderBadges(container){
 .fn-hdr-frac{font-size:.85rem;font-weight:800;color:#fff;min-width:35px}
 .fn-hdr-rwd{width:48px;height:48px;border-radius:6px;background:linear-gradient(135deg,#1e3a5c,#0f2540);border:2px solid #475569;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
 .fn-rows{padding:6px}
-.fn-row{display:flex;align-items:center;padding:10px 14px;gap:12px;background:rgba(15,35,60,.55);margin-bottom:4px;border-radius:6px;border:1px solid rgba(80,140,200,.08);transition:transform .15s ease,box-shadow .25s,background .25s;cursor:default;position:relative;overflow:hidden;transform-style:preserve-3d;will-change:transform}
+.fn-row{display:flex;align-items:center;padding:10px 14px;gap:12px;background:rgba(15,35,60,.55);margin-bottom:4px;border-radius:6px;border:1px solid rgba(80,140,200,.08);transition:transform .15s ease,box-shadow .25s,background .25s;cursor:default;position:relative;overflow:hidden;transform-style:preserve-3d}
 .fn-row:hover{background:rgba(25,50,80,.7);box-shadow:0 6px 20px rgba(30,100,200,.2)}
 .fn-row::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transform:skewX(-15deg);pointer-events:none}
 .fn-row:hover::after{animation:fnShine .7s ease}
@@ -2095,22 +2070,23 @@ async function renderBadges(container){
     document.querySelectorAll('.fn-sec').forEach(s=>{s.style.display=(f==='all'||s.dataset.fam===f)?'block':'none'});
   });
 
-  // Parallax tilt effect on rows
+  // Parallax tilt — throttled with rAF
+  let _raf=0;
   container.addEventListener('mousemove',e=>{
-    const row=e.target.closest('.fn-row');if(!row)return;
-    const rect=row.getBoundingClientRect();
-    const x=(e.clientX-rect.left)/rect.width-0.5;
-    const y=(e.clientY-rect.top)/rect.height-0.5;
-    row.style.transform=`perspective(800px) rotateY(${x*5}deg) rotateX(${-y*6}deg) translateY(-2px) scale(1.01)`;
+    if(_raf)return;
+    _raf=requestAnimationFrame(()=>{
+      _raf=0;
+      const row=e.target.closest('.fn-row');if(!row)return;
+      const rect=row.getBoundingClientRect();
+      const x=(e.clientX-rect.left)/rect.width-0.5;
+      const y=(e.clientY-rect.top)/rect.height-0.5;
+      row.style.transform=`perspective(800px) rotateY(${x*4}deg) rotateX(${-y*4}deg) translateY(-1px)`;
+    });
   });
   container.addEventListener('mouseleave',e=>{
     const row=e.target.closest('.fn-row');
     if(row)row.style.transform='';
   },true);
-  // Reset tilt when mouse leaves any row
-  container.querySelectorAll('.fn-row').forEach(row=>{
-    row.addEventListener('mouseleave',()=>{row.style.transform='';});
-  });
 }
 
 function getProgress(badge,vendor){
