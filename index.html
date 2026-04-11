@@ -1653,10 +1653,22 @@ async function createProject(){
   if(project)PROJECTS.push(project);
   showToast('Projet cree',name+' - '+region,'var(--green)');
 
-  // Assign all matching unassigned prospects to this vendor
-  if(project)await assignProspectsToProject(project);
+  // Guard against realtime listeners during bulk operations
+  _statusUpdating=true;
+  try{
+    if(project)await assignProspectsToProject(project);
+  }finally{
+    // Full refresh to ensure consistency
+    const[,freshClients]=await Promise.all([
+      fetchStatusCounts(),
+      sb.from('clients').select('*').order('created_at',{ascending:false})
+    ]);
+    if(freshClients.data)CLIENTS=freshClients.data;
+    _statusUpdating=false;
+  }
 
   currentTab='projects';
+  APP.recompute();APP.bindAll();
   await render();
 }
 
@@ -1777,6 +1789,7 @@ async function saveEditProject(id){
 
 function confirmDeleteProject(id){
   showConfirmModal('Supprimer ce projet ?\\nLes prospects seront liberes. Notes et modifications conservees.',async()=>{
+    _statusUpdating=true;
     const proj=PROJECTS.find(p=>p.id===id);
     if(proj){
       // Only delete clients that belong to THIS project
@@ -1815,6 +1828,7 @@ function confirmDeleteProject(id){
     await fetchStatusCounts();
     const{data:fc}=await sb.from('clients').select('*').order('created_at',{ascending:false});
     if(fc)CLIENTS=fc;
+    _statusUpdating=false;
     APP.recompute();APP.bindAll();
     showToast('Projet supprime \u2014 prospects liberes','','var(--red)');
     render();
