@@ -350,7 +350,7 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .badge-card.unlocked.rarity-Rare{border-color:#58a6ff!important;box-shadow:0 0 18px rgba(88,166,255,.2)!important}
 .badge-card.unlocked.rarity-Epic{border-color:#bc8cff!important;box-shadow:0 0 20px rgba(188,140,255,.25)!important}
 .badge-card.unlocked.rarity-Legendary{box-shadow:0 0 25px rgba(255,200,50,.3)!important;animation:legendaryBorder 4s linear infinite,legendaryPulse 3s ease-in-out infinite}
-.badge-card.locked::after{content:'🔒';position:absolute;top:8px;right:8px;font-size:12px;opacity:.4}
+.badge-card.locked::after{content:'';position:absolute;top:4px;right:4px;width:24px;height:24px;background:url(assets/game-icons/icon-lock.png) center/contain no-repeat;opacity:.6}
 .badge-card.secret-locked .badge-icon{font-size:1.8rem;color:var(--gray)}
 .badge-progress{width:100%;height:3px;background:var(--s3);border-radius:2px;margin-top:8px;overflow:hidden}
 .badge-progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .4s ease}
@@ -2258,11 +2258,11 @@ async function renderBadges(container){
   // Sections — ALL Fortnite Battle Pass style
   const fkeys=['appels','ventes','conquete','streak','elite'];
   const FNT={
-    appels:{banner:'linear-gradient(90deg,#1a4a8a,#3b82f6,#1a4a8a)',iconBg:'linear-gradient(135deg,#2563EB,#1D4ED8)',iconBd:'#1a4a8a',icon:'\u{1F4DE}'},
-    ventes:{banner:'linear-gradient(90deg,#8B6914,#C4A35A,#8B6914)',iconBg:'linear-gradient(135deg,#D4A017,#B8860B)',iconBd:'#8B6914',icon:'\u{1F4B0}'},
-    conquete:{banner:'linear-gradient(90deg,#7f1d1d,#ef4444,#7f1d1d)',iconBg:'linear-gradient(135deg,#DC2626,#B91C1C)',iconBd:'#7f1d1d',icon:'\u2694\uFE0F'},
-    streak:{banner:'linear-gradient(90deg,#92400e,#f59e0b,#92400e)',iconBg:'linear-gradient(135deg,#F97316,#D97706)',iconBd:'#B8860B',icon:'\u{1F525}'},
-    elite:{banner:'linear-gradient(90deg,#4C1D95,#7C3AED,#4C1D95)',iconBg:'linear-gradient(135deg,#7C3AED,#5B21B6)',iconBd:'#4C1D95',icon:'\u{1F451}'}
+    appels:{banner:'linear-gradient(90deg,#1a4a8a,#3b82f6,#1a4a8a)',iconBg:'linear-gradient(135deg,#2563EB,#1D4ED8)',iconBd:'#1a4a8a',icon:'<img src="assets/game-icons/icon-appels.png" width="36" height="36" style="object-fit:contain">'},
+    ventes:{banner:'linear-gradient(90deg,#8B6914,#C4A35A,#8B6914)',iconBg:'linear-gradient(135deg,#D4A017,#B8860B)',iconBd:'#8B6914',icon:'<img src="assets/game-icons/icon-ventes.png" width="36" height="36" style="object-fit:contain">'},
+    conquete:{banner:'linear-gradient(90deg,#7f1d1d,#ef4444,#7f1d1d)',iconBg:'linear-gradient(135deg,#DC2626,#B91C1C)',iconBd:'#7f1d1d',icon:'<img src="assets/game-icons/icon-conquete.png" width="36" height="36" style="object-fit:contain">'},
+    streak:{banner:'linear-gradient(90deg,#92400e,#f59e0b,#92400e)',iconBg:'linear-gradient(135deg,#F97316,#D97706)',iconBd:'#B8860B',icon:'<img src="assets/game-icons/icon-streak.png" width="36" height="36" style="object-fit:contain">'},
+    elite:{banner:'linear-gradient(90deg,#4C1D95,#7C3AED,#4C1D95)',iconBg:'linear-gradient(135deg,#7C3AED,#5B21B6)',iconBd:'#4C1D95',icon:'<img src="assets/game-icons/icon-elite.png" width="36" height="36" style="object-fit:contain">'}
   };
   fkeys.forEach(fk=>{
     const f=FAMILIES_B[fk];
@@ -2282,7 +2282,7 @@ async function renderBadges(container){
     html+=`</div><span class="fn-hdr-frac">${famDone} / ${list.length}</span></div>`;
     html+=`<div class="fn-hdr-sub">${f.sub} \u2014 Complete all challenges to earn rewards</div>`;
     html+=`</div>`;
-    html+=`<div class="fn-hdr-rwd">${famDone>=list.length?'\u{1F3C6}':'\u{1F512}'}</div>`;
+    html+=`<div class="fn-hdr-rwd">${famDone>=list.length?'\u{1F3C6}':'<img src="assets/game-icons/icon-lock.png" width="24" height="24" style="object-fit:contain;vertical-align:middle">'}</div>`;
     html+=`</div>`;
     html+=`<div class="fn-rows">`;
     list.forEach((b,i)=>{
@@ -2298,7 +2298,7 @@ async function renderBadges(container){
       html+=`<div class="fn-bar"><div class="fn-track"><div class="fn-fill" style="width:${pct}%"></div></div>`;
       html+=`<span class="fn-frac">${cur} / ${max}</span></div></div>`;
       if(isUn){html+=`<div class="fn-chk">\u2705</div>`;}
-      else{html+=`<div class="fn-rcard"><div class="fn-rcard-icon">\u{1F512}</div><div class="fn-rcard-pts">+${b.pts}</div></div>`;}
+      else{html+=`<div class="fn-rcard"><div class="fn-rcard-icon"><img src="assets/game-icons/icon-lock.png" width="28" height="28" style="object-fit:contain"></div><div class="fn-rcard-pts">+${b.pts}</div></div>`;}
       html+=`</div>`;
     });
     html+=`</div></div>`;
