@@ -1763,25 +1763,36 @@ async function saveEditProject(id){
 
 function confirmDeleteProject(id){
   showConfirmModal('Supprimer ce projet ?\\nLes prospects seront liberes. Notes et modifications conservees.',async()=>{
-    // Get clients linked via prospect_id to this project's prospects
     const proj=PROJECTS.find(p=>p.id===id);
     if(proj){
-      const vendor=proj.vendor||proj.vendeur;
-      const region=proj.region;
-      // Find prospects assigned to this vendor in this region
-      const{data:linkedProspects}=await sb.from('prospects').select('id').eq('region',region).eq('vendeur',vendor);
-      if(linkedProspects&&linkedProspects.length){
-        const pIds=linkedProspects.map(p=>p.id);
-        // Release prospects
-        await sb.from('prospects').update({vendeur:'',status:'nouveau',updated_at:new Date().toISOString()}).in('id',pIds);
-        // Delete client records for these prospects
-        await sb.from('clients').delete().in('prospect_id',pIds);
-        // Sync local arrays
-        pIds.forEach(pid=>{
-          const row=DATA.find(d=>d.id===pid);
-          if(row){row.vendeur='';row.status='nouveau'}
-        });
-        CLIENTS=CLIENTS.filter(c=>!pIds.includes(c.prospect_id));
+      // Only delete clients that belong to THIS project
+      const{data:projClients}=await sb.from('clients').select('id,prospect_id,site_status').eq('project_id',id);
+      if(projClients&&projClients.length){
+        // Separate: don't touch won/maintenance clients
+        const safeStatuses=['gagne','maintenance'];
+        const toDelete=projClients.filter(c=>!safeStatuses.includes(c.site_status));
+        const toKeep=projClients.filter(c=>safeStatuses.includes(c.site_status));
+        // Delete only non-won client records
+        if(toDelete.length){
+          const delIds=toDelete.map(c=>c.id);
+          await sb.from('clients').delete().in('id',delIds);
+          // Release only those prospects (not won ones)
+          const releasePids=toDelete.map(c=>c.prospect_id).filter(Boolean);
+          if(releasePids.length){
+            await sb.from('prospects').update({vendeur:'',status:'nouveau',updated_at:new Date().toISOString()}).in('id',releasePids);
+            releasePids.forEach(pid=>{
+              const row=DATA.find(d=>d.id===pid);
+              if(row){row.vendeur='';row.status='nouveau'}
+            });
+          }
+          CLIENTS=CLIENTS.filter(c=>!delIds.includes(c.id));
+        }
+        // Detach won clients from project but keep them
+        if(toKeep.length){
+          const keepIds=toKeep.map(c=>c.id);
+          await sb.from('clients').update({project_id:null,updated_at:new Date().toISOString()}).in('id',keepIds);
+          CLIENTS.forEach(c=>{if(keepIds.includes(c.id))c.project_id=null});
+        }
       }
     }
     await sb.from('projects').update({status:'deleted'}).eq('id',id);
