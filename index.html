@@ -158,6 +158,11 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .tgl-switch[data-selected="true"]{background:rgba(153,197,151,.6)}
 .tgl-switch[data-selected="true"]::after{transform:translateX(24px)}
 .tgl-switch:disabled{opacity:.2;cursor:not-allowed}
+.btn-newproj{padding:1.1em 2em;background:none;border:2px solid #fff;font-size:15px;color:#131313;cursor:pointer;position:relative;overflow:hidden;transition:all .3s;border-radius:12px;background-color:#ecd448;font-weight:800;box-shadow:0 2px 0 2px #000}
+.btn-newproj::before{content:"";position:absolute;width:100px;height:120%;background-color:#ff6700;top:50%;transform:skewX(30deg) translate(-150%,-50%);transition:all .5s}
+.btn-newproj:hover{background-color:#4cc9f0;color:#fff;box-shadow:0 2px 0 2px #0d3b66}
+.btn-newproj:hover::before{transform:skewX(30deg) translate(150%,-50%);transition-delay:.1s}
+.btn-newproj:active{transform:scale(.9)}
 .cl-card select,.cl-card select option{background:#1a1035!important;color:#fff!important}
 .cl-card input,.cl-card textarea{background:rgba(255,255,255,.04)!important;color:#fff!important}
 
@@ -1383,7 +1388,7 @@ async function renderProjects(container){
   let html=`<div class="projects-wrap">
     <div class="proj-header">
       <h2>Projets <span>(${active.length} actifs)</span></h2>
-      <button onclick="openCreateProjectModal()" style="background:linear-gradient(135deg,#d946ef,#7c3aed);color:#fff;border:none;padding:12px 24px;border-radius:10px;font-weight:800;font-size:.85rem;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,.3)">+ Nouveau Projet</button>
+      <button class="btn-newproj" onclick="openCreateProjectModal()">+ Nouveau Projet</button>
     </div>
     <div class="proj-grid">`;
 
