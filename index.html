@@ -1785,59 +1785,166 @@ async function renderLeaderboard(container){
 // 5. BADGES TAB
 // ========================================
 function renderBadges(container){
-  console.log('Total badges:',BADGE_DEFS.length);
   const vendor=isAdmin?VENDOR_NAMES[0]:currentUser;
-  let html=`<div class="badges-wrap">`;
+  const badges=getBadges(vendor);
+  const unlockedIds=new Set(Object.keys(badges).filter(k=>badges[k]&&badges[k].unlocked));
+  const RARITY_META={common:{label:'COMMUN',border:'#8B6914',hi:'#C4A35A'},rare:{label:'RARE',border:'#1a6ea8',hi:'#4da6e8'},epic:{label:'ÉPIQUE',border:'#6b35b5',hi:'#a570e8'},legendary:{label:'LÉGENDAIRE',border:'#b8860b',hi:'#ffd700'},mythic:{label:'MYTHIQUE',border:'#8b0000',hi:'#ff4500'}};
+  const NEW_BADGES=[
+  {id:'b1',name:'Premier Mot',desc:'1er appel passé',pts:20,rarity:'common',family:'appels'},
+  {id:'b2',name:'Bavard',desc:'15 appels passés',pts:35,rarity:'common',family:'appels'},
+  {id:'b3',name:'Crieur Public',desc:'30 appels passés',pts:50,rarity:'common',family:'appels'},
+  {id:'b4',name:'Téléphoniste',desc:'50 appels passés',pts:60,rarity:'rare',family:'appels'},
+  {id:'b5',name:'Voix Affûtée',desc:'100 appels passés',pts:80,rarity:'rare',family:'appels'},
+  {id:'b6',name:'Voix de Guerre',desc:'200 appels passés',pts:100,rarity:'rare',family:'appels'},
+  {id:'b7',name:'Écho des Montagnes',desc:'350 appels passés',pts:150,rarity:'epic',family:'appels'},
+  {id:'b8',name:'Maître des Ondes',desc:'500 appels passés',pts:180,rarity:'epic',family:'appels'},
+  {id:'b9',name:'Seigneur du Signal',desc:'750 appels passés',pts:250,rarity:'legendary',family:'appels'},
+  {id:'b10',name:'Voix des Dieux',desc:'1000 appels passés',pts:350,rarity:'legendary',family:'appels'},
+  {id:'b11',name:'Lève-tôt',desc:'5 appels avant 9h',pts:25,rarity:'common',family:'appels'},
+  {id:'b12',name:'Noctambule',desc:'5 appels après 20h',pts:25,rarity:'common',family:'appels'},
+  {id:'b13',name:'Sniper',desc:'3 appels conclus en 1h',pts:60,rarity:'rare',family:'appels'},
+  {id:'b14',name:'Mitrailleur',desc:'20 appels en 1 journée',pts:90,rarity:'rare',family:'appels'},
+  {id:'b15',name:'Tempête',desc:'30 appels en 1 journée',pts:150,rarity:'epic',family:'appels'},
+  {id:'b16',name:'Ouragan',desc:'50 appels en 1 journée',pts:200,rarity:'epic',family:'appels'},
+  {id:'b17',name:'Rappel Éclair',desc:'Rappeler < 1h après refus',pts:40,rarity:'rare',family:'appels'},
+  {id:'b18',name:'Persévérant',desc:'10 rappels même prospect',pts:70,rarity:'rare',family:'appels'},
+  {id:'b19',name:'Chasseur de Lundi',desc:'10 appels chaque lundi',pts:80,rarity:'rare',family:'appels'},
+  {id:'b20',name:'Guerrier du Samedi',desc:'15 appels un samedi',pts:100,rarity:'epic',family:'appels'},
+  {id:'b21',name:'Première Prise',desc:'1ère vente conclue',pts:40,rarity:'common',family:'ventes'},
+  {id:'b22',name:'Débutant Prometteur',desc:'3 ventes conclues',pts:60,rarity:'common',family:'ventes'},
+  {id:'b23',name:'Chasseur',desc:'5 ventes conclues',pts:80,rarity:'common',family:'ventes'},
+  {id:'b24',name:'Vendeur',desc:'10 ventes conclues',pts:100,rarity:'rare',family:'ventes'},
+  {id:'b25',name:'Marchand',desc:'20 ventes conclues',pts:150,rarity:'rare',family:'ventes'},
+  {id:'b26',name:'Négociant',desc:'35 ventes conclues',pts:200,rarity:'rare',family:'ventes'},
+  {id:'b27',name:'Marchand d\u0027Or',desc:'50 ventes conclues',pts:250,rarity:'epic',family:'ventes'},
+  {id:'b28',name:'Grand Marchand',desc:'75 ventes conclues',pts:300,rarity:'epic',family:'ventes'},
+  {id:'b29',name:'Baron des Contrats',desc:'100 ventes conclues',pts:400,rarity:'legendary',family:'ventes'},
+  {id:'b30',name:'Duc du Commerce',desc:'150 ventes conclues',pts:500,rarity:'legendary',family:'ventes'},
+  {id:'b31',name:'Roi du Commerce',desc:'250 ventes conclues',pts:700,rarity:'mythic',family:'ventes'},
+  {id:'b32',name:'Sang Froid',desc:'Closer en < 5 min',pts:80,rarity:'epic',family:'ventes'},
+  {id:'b33',name:'Triple Kill',desc:'3 ventes en 1 journée',pts:120,rarity:'epic',family:'ventes'},
+  {id:'b34',name:'Penta Kill',desc:'5 ventes en 1 journée',pts:200,rarity:'legendary',family:'ventes'},
+  {id:'b35',name:'Semaine Parfaite',desc:'1 vente/jour pendant 7j',pts:180,rarity:'epic',family:'ventes'},
+  {id:'b36',name:'Mois d\u0027Or',desc:'30 ventes en 1 mois',pts:350,rarity:'legendary',family:'ventes'},
+  {id:'b37',name:'Conversion Rapide',desc:'5 ventes jour du contact',pts:100,rarity:'rare',family:'ventes'},
+  {id:'b38',name:'Séducteur',desc:'10 hésitants convertis',pts:150,rarity:'epic',family:'ventes'},
+  {id:'b39',name:'Tarif Premium',desc:'Vente au tarif max 10x',pts:200,rarity:'legendary',family:'ventes'},
+  {id:'b40',name:'Sans Remise',desc:'20 ventes sans réduction',pts:250,rarity:'legendary',family:'ventes'},
+  {id:'b41',name:'Éclaireur',desc:'1ère ville ciblée',pts:25,rarity:'common',family:'conquete'},
+  {id:'b42',name:'Cartographe',desc:'3 villes ciblées',pts:40,rarity:'common',family:'conquete'},
+  {id:'b43',name:'Stratège',desc:'Actif dans 2 villes',pts:50,rarity:'common',family:'conquete'},
+  {id:'b44',name:'Commandant',desc:'Actif dans 4 villes',pts:80,rarity:'rare',family:'conquete'},
+  {id:'b45',name:'Seigneur de Crète',desc:'5 ventes à Héraklion',pts:120,rarity:'epic',family:'conquete'},
+  {id:'b46',name:'Seigneur d\u0027Athènes',desc:'5 ventes à Athènes',pts:120,rarity:'epic',family:'conquete'},
+  {id:'b47',name:'Conquérant',desc:'3 villes avec 5+ ventes',pts:200,rarity:'epic',family:'conquete'},
+  {id:'b48',name:'Grand Conquérant',desc:'5 villes avec 5+ ventes',pts:300,rarity:'legendary',family:'conquete'},
+  {id:'b49',name:'Seigneur des Îles',desc:'Rhodes+Mykonos+Santorin',pts:350,rarity:'legendary',family:'conquete'},
+  {id:'b50',name:'Seigneur du Nord',desc:'Thessalonique+Kavala',pts:300,rarity:'legendary',family:'conquete'},
+  {id:'b51',name:'Amiral de l\u0027Égée',desc:'5 îles conquises',pts:400,rarity:'legendary',family:'conquete'},
+  {id:'b52',name:'Maître de l\u0027Égée',desc:'8 villes conquises',pts:650,rarity:'mythic',family:'conquete'},
+  {id:'b53',name:'Pionnier',desc:'1ère vente dans une ville',pts:30,rarity:'common',family:'conquete'},
+  {id:'b54',name:'Défricheur',desc:'1er vendeur sur 3 villes',pts:100,rarity:'rare',family:'conquete'},
+  {id:'b55',name:'Dominateur',desc:'Top vendeur d\u0027une ville',pts:150,rarity:'epic',family:'conquete'},
+  {id:'b56',name:'Seigneur Incontesté',desc:'Top vendeur de 3 villes',pts:300,rarity:'legendary',family:'conquete'},
+  {id:'b57',name:'Expansion Rapide',desc:'3 villes en 1 semaine',pts:150,rarity:'epic',family:'conquete'},
+  {id:'b58',name:'Colonie',desc:'10 ventes dans une ville',pts:200,rarity:'epic',family:'conquete'},
+  {id:'b59',name:'Métropole',desc:'25 ventes dans une ville',pts:350,rarity:'legendary',family:'conquete'},
+  {id:'b60',name:'Empire',desc:'50 ventes dans une ville',pts:600,rarity:'mythic',family:'conquete'},
+  {id:'b61',name:'Régulier',desc:'3 jours consécutifs',pts:30,rarity:'common',family:'streak'},
+  {id:'b62',name:'Habitué',desc:'5 jours consécutifs',pts:45,rarity:'common',family:'streak'},
+  {id:'b63',name:'Assidu',desc:'7 jours consécutifs',pts:60,rarity:'common',family:'streak'},
+  {id:'b64',name:'En Feu',desc:'10 jours consécutifs',pts:80,rarity:'rare',family:'streak'},
+  {id:'b65',name:'Inépuisable',desc:'14 jours consécutifs',pts:120,rarity:'rare',family:'streak'},
+  {id:'b66',name:'Infatigable',desc:'21 jours consécutifs',pts:150,rarity:'epic',family:'streak'},
+  {id:'b67',name:'Acharné',desc:'30 jours consécutifs',pts:200,rarity:'epic',family:'streak'},
+  {id:'b68',name:'Machine de Guerre',desc:'45 jours consécutifs',pts:300,rarity:'legendary',family:'streak'},
+  {id:'b69',name:'Implacable',desc:'60 jours consécutifs',pts:450,rarity:'legendary',family:'streak'},
+  {id:'b70',name:'Légende Vivante',desc:'90 jours consécutifs',pts:600,rarity:'mythic',family:'streak'},
+  {id:'b71',name:'Warrior du Lundi',desc:'4 lundis de suite',pts:50,rarity:'rare',family:'streak'},
+  {id:'b72',name:'Week-End Warrior',desc:'3 ventes un week-end',pts:100,rarity:'epic',family:'streak'},
+  {id:'b73',name:'Pas de Vacances',desc:'Actif 3 jours fériés',pts:80,rarity:'rare',family:'streak'},
+  {id:'b74',name:'Premier de Cordée',desc:'1er appel du jour 10x',pts:70,rarity:'rare',family:'streak'},
+  {id:'b75',name:'Dernier Debout',desc:'Dernier appel du soir 10x',pts:70,rarity:'rare',family:'streak'},
+  {id:'b76',name:'Comeback Kid',desc:'Retour après 7j off',pts:40,rarity:'common',family:'streak'},
+  {id:'b77',name:'Phénix',desc:'Retour après 30j off',pts:80,rarity:'rare',family:'streak'},
+  {id:'b78',name:'Constance',desc:'50 appels/sem × 4 sem',pts:180,rarity:'epic',family:'streak'},
+  {id:'b79',name:'Rythme de Croisière',desc:'20 appels/j × 10j',pts:150,rarity:'epic',family:'streak'},
+  {id:'b80',name:'Métronome',desc:'10 appels/j × 14j exact',pts:250,rarity:'legendary',family:'streak'},
+  {id:'b81',name:'Rookie',desc:'Compléter son profil',pts:10,rarity:'common',family:'elite'},
+  {id:'b82',name:'Explorateur',desc:'Visiter tous les onglets',pts:10,rarity:'common',family:'elite'},
+  {id:'b83',name:'Premier Pas',desc:'1ère semaine complète',pts:30,rarity:'common',family:'elite'},
+  {id:'b84',name:'Initié',desc:'Débloquer 10 badges',pts:50,rarity:'rare',family:'elite'},
+  {id:'b85',name:'Collectionneur',desc:'Débloquer 25 badges',pts:100,rarity:'rare',family:'elite'},
+  {id:'b86',name:'Archiviste',desc:'Débloquer 50 badges',pts:200,rarity:'epic',family:'elite'},
+  {id:'b87',name:'L\u0027Inébranlable',desc:'50 refus sans abandon',pts:200,rarity:'legendary',family:'elite'},
+  {id:'b88',name:'Blindé',desc:'100 refus sans abandon',pts:350,rarity:'legendary',family:'elite'},
+  {id:'b89',name:'Mur d\u0027Acier',desc:'200 refus sans abandon',pts:500,rarity:'mythic',family:'elite'},
+  {id:'b90',name:'Meilleur du Mois',desc:'Top vendeur 1 mois',pts:300,rarity:'legendary',family:'elite'},
+  {id:'b91',name:'Meilleur du Trimestre',desc:'Top vendeur 3 mois',pts:500,rarity:'mythic',family:'elite'},
+  {id:'b92',name:'Dieu de la Vente',desc:'Top 2 mois de suite',pts:600,rarity:'mythic',family:'elite'},
+  {id:'b93',name:'Mentor',desc:'Aider un collègue',pts:80,rarity:'rare',family:'elite'},
+  {id:'b94',name:'Team Player',desc:'Objectif équipe 3x',pts:150,rarity:'epic',family:'elite'},
+  {id:'b95',name:'Leader',desc:'Top leaderboard 1 sem',pts:200,rarity:'legendary',family:'elite'},
+  {id:'b96',name:'Sang Froid Total',desc:'Closer 3x en < 5 min',pts:250,rarity:'legendary',family:'elite'},
+  {id:'b97',name:'Le Fantôme',desc:'10 ventes sans note',pts:100,rarity:'epic',family:'elite'},
+  {id:'b98',name:'Ghost Mode',desc:'Actif dimanche 5x',pts:80,rarity:'rare',family:'elite'},
+  {id:'b99',name:'L\u0027Élu',desc:'Tous badges d\u0027une famille',pts:400,rarity:'mythic',family:'elite'},
+  {id:'b100',name:'Le Maître',desc:'80+ badges débloqués',pts:1000,rarity:'mythic',family:'elite'}
+  ];
+  const FAMILIES_B={appels:{label:'📞 Appels',sub:'Maîtrise du téléphone'},ventes:{label:'💰 Ventes',sub:'L\u0027art de conclure'},conquete:{label:'⚔️ Conquête',sub:'Territoires grecs'},streak:{label:'🔥 Streak',sub:'Régularité et constance'},elite:{label:'👑 Élite',sub:'Exploits légendaires'}};
+  const unlockCount=unlockedIds.size;
+  const totalPts=NEW_BADGES.filter(b=>unlockedIds.has(b.id)).reduce((s,b)=>s+b.pts,0);
 
+  function frameSvg(r){const m=RARITY_META[r];const c=m.border,h=m.hi;let ex='';if(r==='legendary')ex='<path d="M80 -2l4 8h-8z" fill="'+h+'"/>';if(r==='mythic')ex='<path d="M80 -4l5 10h-10z" fill="'+h+'"/><circle cx="6" cy="6" r="3" fill="'+h+'" opacity=".4"/><circle cx="154" cy="6" r="3" fill="'+h+'" opacity=".4"/>';return '<svg style="position:absolute;inset:0;pointer-events:none" viewBox="0 0 160 220" preserveAspectRatio="none"><rect x="2" y="2" width="156" height="216" rx="6" fill="none" stroke="'+c+'" stroke-width="1.5"/><rect x="8" y="8" width="144" height="204" rx="4" fill="none" stroke="'+c+'" stroke-width=".5" opacity=".4"/><polygon points="0,0 8,4 4,8" fill="'+h+'" opacity=".7"/><polygon points="160,0 152,4 156,8" fill="'+h+'" opacity=".7"/><polygon points="0,220 8,216 4,212" fill="'+h+'" opacity=".7"/><polygon points="160,220 152,216 156,212" fill="'+h+'" opacity=".7"/><polygon points="80,0 84,5 80,4 76,5" fill="'+h+'" opacity=".5"/><polygon points="80,220 84,215 80,216 76,215" fill="'+h+'" opacity=".5"/>'+ex+'<\/svg>';}
+  function badgeIcon(b){const m=RARITY_META[b.rarity];const c=m.hi,c2=m.border;const fam=b.family;let inner='';if(fam==='appels')inner='<path d="M24 20c0-4 4-8 8-8s8 4 8 8v8c0 4-4 8-8 8s-8-4-8-8v-8z" fill="'+c2+'" stroke="'+c+'" stroke-width="1.5"/><circle cx="32" cy="24" r="4" fill="'+c+'" opacity=".5"/><path d="M26 40h12v6a6 6 0 01-12 0v-6z" fill="'+c2+'"/>';else if(fam==='ventes')inner='<rect x="16" y="22" width="32" height="24" rx="4" fill="#1a1400" stroke="'+c+'" stroke-width="1.5"/><rect x="16" y="22" width="32" height="4" rx="2" fill="'+c2+'"/><circle cx="32" cy="36" r="6" fill="'+c+'" opacity=".6"/><text x="32" y="39" text-anchor="middle" fill="#fff" font-size="8" font-weight="900">€<\/text>';else if(fam==='conquete')inner='<path d="M32 10v34" stroke="'+c+'" stroke-width="2.5" stroke-linecap="round"/><path d="M32 10l16 8v10l-16-6z" fill="'+c2+'" stroke="'+c+'" stroke-width="1"/><circle cx="32" cy="48" r="4" fill="'+c2+'" stroke="'+c+'" stroke-width="1"/>';else if(fam==='streak')inner='<path d="M32 8c-6 10-14 16-14 26a14 14 0 0028 0c0-10-8-16-14-26z" fill="'+c2+'" opacity=".6" stroke="'+c+'" stroke-width="1.5"/><path d="M32 18c-3 6-8 10-8 16a8 8 0 0016 0c0-6-5-10-8-16z" fill="'+c+'" opacity=".5"/><circle cx="32" cy="38" r="2" fill="rgba(255,255,255,.4)"/>';else inner='<polygon points="32,8 38,24 54,24 42,34 46,50 32,42 18,50 22,34 10,24 26,24" fill="'+c2+'" opacity=".4" stroke="'+c+'" stroke-width="1.5"/><circle cx="32" cy="28" r="4" fill="'+c+'"/><circle cx="31" cy="27" r="1.5" fill="rgba(255,255,255,.4)"/>';return '<svg viewBox="0 0 64 64" style="width:64px;height:64px"><defs><radialGradient id="gbg'+b.id+'"><stop offset="0%" stop-color="'+c+'" stop-opacity=".2"/><stop offset="100%" stop-color="transparent"/><\/radialGradient><\/defs><ellipse cx="32" cy="32" rx="28" ry="28" fill="url(#gbg'+b.id+')"/>'+inner+'<\/svg>';}
+  const lockSvg='<svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);z-index:5;opacity:.6" viewBox="0 0 24 24" width="28" height="28"><rect x="5" y="11" width="14" height="11" rx="2" fill="#2a2a3a" stroke="#555" stroke-width="1.5"/><path d="M8 11V7a4 4 0 018 0v4" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="#666"/><\/svg>';
+
+  let html=`<style>.bdg-hdr{padding:16px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.06)}.bdg-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.04);padding:0 24px;overflow-x:auto;scrollbar-width:none}.bdg-tabs::-webkit-scrollbar{display:none}.bdg-tab{padding:12px 18px;font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:rgba(255,255,255,.35);border-bottom:2px solid transparent;transition:.25s;white-space:nowrap}.bdg-tab:hover{color:rgba(255,255,255,.6)}.bdg-tab.active{color:#ffd700;border-bottom-color:#ffd700}.bdg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px;padding:20px 24px}.bdg-card{position:relative;min-height:210px;display:flex;flex-direction:column;align-items:center;padding:18px 10px 12px;border-radius:8px;background:linear-gradient(145deg,#12122e,#0d0d20);transition:transform .3s,box-shadow .3s;cursor:default}.bdg-card.unlocked:hover{transform:translateY(-3px) scale(1.03)}.bdg-card.locked .bdg-icn{filter:grayscale(100%) brightness(.4);opacity:.35}.bdg-card.locked::before{content:'';position:absolute;inset:0;background:rgba(8,8,18,.45);border-radius:8px;z-index:1}.bdg-icn{margin-bottom:8px;position:relative;z-index:2}.bdg-nm{font-family:'Cinzel',serif;font-size:.68rem;font-weight:700;text-align:center;line-height:1.3;margin-bottom:3px;z-index:2;min-height:28px;display:flex;align-items:center}.bdg-ds{font-size:.58rem;color:rgba(255,255,255,.4);text-align:center;line-height:1.3;z-index:2}.bdg-pt{font-size:.58rem;font-weight:800;letter-spacing:.08em;margin-top:4px;z-index:2}.bdg-rt{font-size:.48rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-top:2px;z-index:2}.bdg-sec{margin-bottom:32px}.bdg-sec-t{font-family:'Cinzel',serif;font-size:1.2rem;font-weight:900;padding:0 24px;margin-bottom:4px}.bdg-sec-s{font-size:.7rem;color:rgba(255,255,255,.3);padding:0 24px;margin-bottom:12px}.bdg-pbar{height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden;min-width:150px;max-width:300px;flex:1}.bdg-pfill{height:100%;border-radius:3px;background:linear-gradient(90deg,#b8860b,#ffd700);transition:width 1s}.bdg-card.unlocked::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transform:skewX(-15deg);z-index:3;pointer-events:none}.bdg-card.unlocked:hover::after{animation:bdgShim .8s ease}@keyframes bdgShim{0%{left:-100%}100%{left:200%}}</style>`;
+
+  // Header
+  html+=`<div class="bdg-hdr"><span style="font-family:Cinzel;font-size:1.1rem;font-weight:700;color:#fff">${escHtml(vendor)}</span><span style="font-size:.75rem;color:rgba(255,255,255,.5)"><b style="color:#ffd700">${unlockCount}</b> / ${NEW_BADGES.length} badges</span><div class="bdg-pbar"><div class="bdg-pfill" style="width:${(unlockCount/NEW_BADGES.length*100).toFixed(1)}%"></div></div><span style="font-size:.75rem;color:#ffd700;font-weight:700">${totalPts} pts</span></div>`;
+
+  // Admin vendor picker
   if(isAdmin){
-    html+=`<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:16px">Badges Vendeurs</h2>`;
-    html+=`<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap">`;
-    VENDOR_NAMES.forEach(v=>{
-      const badges=getBadges(v);
-      const unlocked=Object.values(badges).filter(b=>b.unlocked).length;
-      html+=`<button class="btn btn-ghost" onclick="renderBadgesFlat('${v}')" style="font-size:.75rem">${v} <span style="color:var(--accent);margin-left:4px">${unlocked}/${BADGE_DEFS.length}</span></button>`;
-    });
+    html+=`<div style="display:flex;gap:8px;padding:12px 24px;flex-wrap:wrap">`;
+    VENDOR_NAMES.forEach(v=>{html+=`<button class="btn btn-ghost btn-sm" onclick="renderBadges(document.getElementById('tabContent'))" style="font-size:.7rem">${v}</button>`});
     html+=`</div>`;
   }
 
-  html+=`<div id="badgesFlatGrid"></div></div>`;
-  container.innerHTML=html;
-  renderBadgesFlat(vendor);
-}
+  // Tabs
+  html+=`<div class="bdg-tabs" id="bdgTabs"><div class="bdg-tab active" data-f="all">🏛️ TOUT</div><div class="bdg-tab" data-f="appels">📞 APPELS</div><div class="bdg-tab" data-f="ventes">💰 VENTES</div><div class="bdg-tab" data-f="conquete">⚔️ CONQUÊTE</div><div class="bdg-tab" data-f="streak">🔥 STREAK</div><div class="bdg-tab" data-f="elite">👑 ÉLITE</div></div>`;
 
-function renderBadgesFlat(vendor){
-  const badges=getBadges(vendor);
-  const unlocked=Object.values(badges).filter(b=>b.unlocked).length;
-  const totalPts=BADGE_DEFS.reduce((s,b)=>{const st=badges[b.id];return s+(st&&st.unlocked?b.points:0)},0);
-
-  let html=`<h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px">${vendor} <span style="color:var(--accent);font-size:.85rem">${unlocked}/${BADGE_DEFS.length}</span></h2>
-    <p style="font-size:.72rem;color:var(--yellow);margin-bottom:24px">Total badge points: ${totalPts}</p>`;
-
-  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;padding:16px 0">`;
-
-  BADGE_DEFS.forEach(b=>{
-    const state=badges[b.id]||{unlocked:false};
-    const isUnlocked=state.unlocked;
-    const isSecret=b.secret&&!isUnlocked;
-    const border=isUnlocked?'border:1px solid #e879f9':'border:1px solid rgba(255,255,255,0.12)';
-    const shadow=isUnlocked?'box-shadow:0 0 14px rgba(232,121,249,0.25);':'';
-    const lock=!isUnlocked?'<span style="position:absolute;top:6px;right:8px;font-size:11px;opacity:0.35">\uD83D\uDD12</span>':'';
-    const icon=isSecret?'<div style="font-size:28px;margin-bottom:8px">???</div>':`<div style="margin-bottom:8px;display:flex;align-items:center;justify-content:center">${b.icon}</div>`;
-    const name=isSecret?'???':b.name;
-    const desc=isSecret?'Secret badge':b.desc;
-
-    html+=`<div style="position:relative;background:#2a1f4a;${border};border-radius:12px;padding:16px 12px;text-align:center;${shadow}">
-      ${lock}${icon}
-      <div style="color:#fff;font-size:12px;font-weight:700;margin-bottom:4px">${name}</div>
-      <div style="color:rgba(255,255,255,0.55);font-size:10px;margin-bottom:6px">${desc}</div>
-      <div style="color:#fbbf24;font-size:11px;font-weight:700">+${b.points} pts</div>
-      <div style="color:rgba(255,255,255,0.3);font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-top:3px">${b.rarity}</div>
-      ${isUnlocked&&state.date?`<div style="color:var(--accent);font-size:9px;margin-top:4px">${new Date(state.date).toLocaleDateString('fr-FR')}</div>`:''}
-    </div>`;
+  // Sections
+  const fkeys=['appels','ventes','conquete','streak','elite'];
+  fkeys.forEach(fk=>{
+    const f=FAMILIES_B[fk];
+    const list=NEW_BADGES.filter(b=>b.family===fk);
+    html+=`<div class="bdg-sec" data-fam="${fk}"><div class="bdg-sec-t">${f.label}</div><div class="bdg-sec-s">${f.sub}</div><div class="bdg-grid">`;
+    list.forEach(b=>{
+      const rm=RARITY_META[b.rarity];
+      const isUn=unlockedIds.has(b.id);
+      html+=`<div class="bdg-card ${isUn?'unlocked':'locked'}">`;
+      html+=frameSvg(b.rarity);
+      html+=`<div class="bdg-icn">${badgeIcon(b)}</div>`;
+      if(!isUn)html+=lockSvg;
+      html+=`<div class="bdg-nm" style="color:${isUn?rm.hi:'rgba(255,255,255,.25)'}">${escHtml(b.name)}</div>`;
+      html+=`<div class="bdg-ds">${escHtml(b.desc)}</div>`;
+      html+=`<div class="bdg-pt" style="color:${rm.hi}">+${b.pts} pts</div>`;
+      html+=`<div class="bdg-rt" style="color:${rm.hi}">${rm.label}</div>`;
+      html+=`</div>`;
+    });
+    html+=`</div></div>`;
   });
 
-  html+=`</div>`;
-  document.getElementById('badgesFlatGrid').innerHTML=html;
+  container.innerHTML=html;
+
+  // Tab switching
+  document.getElementById('bdgTabs').addEventListener('click',e=>{
+    const tab=e.target.closest('.bdg-tab');if(!tab)return;
+    document.querySelectorAll('.bdg-tab').forEach(t=>t.classList.toggle('active',t===tab));
+    const f=tab.dataset.f;
+    document.querySelectorAll('.bdg-sec').forEach(s=>{s.style.display=(f==='all'||s.dataset.fam===f)?'block':'none'});
+  });
 }
 
 function getProgress(badge,vendor){
