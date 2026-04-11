@@ -2282,7 +2282,7 @@ async function renderBadges(container){
     html+=`</div><span class="fn-hdr-frac">${famDone} / ${list.length}</span></div>`;
     html+=`<div class="fn-hdr-sub">${f.sub} \u2014 Complete all challenges to earn rewards</div>`;
     html+=`</div>`;
-    html+=`<div class="fn-hdr-rwd">${famDone>=list.length?'\u{1F3C6}':'<img src="assets/game-icons/icon-lock.png" width="84" height="84" style="object-fit:contain;vertical-align:middle">'}</div>`;
+    html+=`<div class="fn-hdr-rwd">${famDone>=list.length?'<img src="assets/game-icons/icon-valide.png" width="84" height="84" style="object-fit:contain;vertical-align:middle">':'<img src="assets/game-icons/icon-lock.png" width="84" height="84" style="object-fit:contain;vertical-align:middle">'}</div>`;
     html+=`</div>`;
     html+=`<div class="fn-rows">`;
     list.forEach((b,i)=>{
@@ -2297,7 +2297,7 @@ async function renderBadges(container){
       html+=`<div class="fn-desc" style="font-size:.85rem;color:rgba(255,255,255,.32);margin-bottom:4px">${escHtml(b.desc)}</div>`;
       html+=`<div class="fn-bar"><div class="fn-track"><div class="fn-fill" style="width:${pct}%"></div></div>`;
       html+=`<span class="fn-frac">${cur} / ${max}</span></div></div>`;
-      if(isUn){html+=`<div class="fn-chk">\u2705</div>`;}
+      if(isUn){html+=`<div class="fn-chk"><img src="assets/game-icons/icon-valide.png" width="84" height="84" style="object-fit:contain"></div>`;}
       else{html+=`<div class="fn-rcard"><div class="fn-rcard-icon"><img src="assets/game-icons/icon-lock.png" width="84" height="84" style="object-fit:contain"></div><div class="fn-rcard-pts">+${b.pts}</div></div>`;}
       html+=`</div>`;
     });
