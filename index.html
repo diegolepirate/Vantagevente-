@@ -1070,16 +1070,18 @@ async function logActivity(action,target,prospectId,details){
 }
 
 async function logHistory(prospectId,prospectName,actionType,oldValue,newValue,note){
-  await sb.from('prospect_history').insert({
-    prospect_id:prospectId,
-    prospect_name:prospectName||'',
-    vendor_name:currentUser,
-    action_type:actionType,
-    old_value:oldValue||null,
-    new_value:newValue||null,
-    note:note||null,
-    created_at:new Date().toISOString()
-  });
+  try{
+    await sb.from('prospect_history').insert({
+      prospect_id:prospectId,
+      prospect_name:prospectName||'',
+      vendor_name:currentUser,
+      action_type:actionType,
+      old_value:oldValue?String(oldValue):null,
+      new_value:newValue?String(newValue):null,
+      note:note||null,
+      created_at:new Date().toISOString()
+    });
+  }catch(e){console.log('History log error:',e)}
 }
 
 // ========================================
@@ -1143,6 +1145,9 @@ async function renderProspects(container){
 
   const families=[...new Set(DATA.map(d=>d.famille).filter(Boolean))].sort();
   const clientPids=new Set(CLIENTS.filter(c=>!isAdmin?c.vendor_name===currentUser:true).map(c=>c.prospect_id).filter(Boolean));
+  // Preload prospect IDs that have history
+  const{data:historicRaw}=await sb.from('prospect_history').select('prospect_id').eq('vendor_name',currentUser);
+  const hasHistory=new Set((historicRaw||[]).map(h=>h.prospect_id));
 
   let html='';
 
@@ -1186,7 +1191,7 @@ async function renderProspects(container){
     const isSel=d.vendeur===currentUser;
     const isLocked=d.vendeur&&d.vendeur!==currentUser;
     html+=`<tr class="row-${d.status||'nouveau'}" data-row-idx="${i}" data-pid="${d.id}">
-      <td><a href="#" onclick="openDetail(${d.id});return false" style="font-weight:600">${escHtml(d.nom)}</a>${clientPids.has(d.id)?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,.6);margin-left:6px;vertical-align:middle" title="Client actif"></span>':''}</td>
+      <td><a href="#" onclick="openDetail(${d.id});return false" style="font-weight:600">${escHtml(d.nom)}</a>${clientPids.has(d.id)?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 6px rgba(52,211,153,.6);margin-left:6px;vertical-align:middle" title="Client actif"></span>':''}${hasHistory.has(d.id)?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#a78bfa;box-shadow:0 0 4px rgba(167,139,250,.6);margin-left:6px;vertical-align:middle" title="Historique disponible"></span>':''}</td>
       <td><a href="tel:${d.numero}" class="phone-link">${d.numero||''}</a></td>
       <td><span class="type-${(d.type_tel||'').toLowerCase()==='fixe'?'fixe':'port'}">${d.type_tel||''}</span></td>
       <td style="text-align:center"><button class="select-btn" onclick="toggleSelectProspect(${d.id},this)" data-prospect-id="${d.id}" data-selected="${isSel?'true':'false'}" ${isLocked?'disabled title="'+escHtml(d.vendeur)+'"':''} style="width:80px;height:28px;border-radius:20px;border:1px solid ${isSel?'rgba(56,189,248,0.6)':'rgba(56,189,248,0.25)'};background:${isSel?'rgba(56,189,248,0.15)':'rgba(56,189,248,0.05)'};backdrop-filter:blur(8px);cursor:${isLocked?'not-allowed':'pointer'};position:relative;overflow:hidden;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);transform:perspective(500px) rotateX(8deg);box-shadow:${isSel?'0 4px 16px rgba(56,189,248,0.25),inset 0 1px 0 rgba(255,255,255,0.15),0 0 20px rgba(56,189,248,0.15)':'0 4px 12px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.08),0 0 0 1px rgba(56,189,248,0.1)'};opacity:${isLocked?'0.2':'1'}"><span class="btn-fill" style="position:absolute;inset:0;background:linear-gradient(135deg,#38bdf8,#06b6d4,#0ea5e9);transform:scaleX(${isSel?'1':'0'});transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);border-radius:20px"></span><span style="position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(180deg,rgba(255,255,255,0.12),transparent);border-radius:20px 20px 0 0;pointer-events:none"></span><svg style="position:relative;z-index:1;display:block;margin:auto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${isSel?'#fff':'rgba(56,189,248,0.6)'}" stroke-width="2.5">${isSel?'<polyline points="20 6 9 17 4 12"/>':'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'}</svg></button></td>
@@ -3352,13 +3357,32 @@ async function openDetail(id){
     if(!row)return;
   }
 
-  const{data:history}=await sb.from('call_history').select('*').eq('prospect_id',id).order('created_at',{ascending:false}).limit(10);
-  const calls=history||[];
+  const[{data:callHist},{data:prospectHist}]=await Promise.all([
+    sb.from('call_history').select('*').eq('prospect_id',id).order('created_at',{ascending:false}).limit(10),
+    sb.from('prospect_history').select('*').eq('prospect_id',id).order('created_at',{ascending:false}).limit(20)
+  ]);
+  const calls=callHist||[];
+  const pHistory=prospectHist||[];
   const resultColors={interested:'#34d399',won:'#e879f9',not_interested:'#f87171',no_answer:'#fbbf24',callback:'#bc8cff'};
   const resultLabels={interested:'Interesse',won:'Gagne',not_interested:'Pas interesse',no_answer:'Pas de reponse',callback:'A rappeler'};
 
+  // Alert if already sold/delivered
+  const alreadySold=pHistory.find(h=>h.action_type==='sale_won'||h.action_type==='site_delivered');
+  let alertHTML='';
+  if(alreadySold){
+    const soldDate=new Date(alreadySold.created_at).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+    alertHTML=`<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">\u26A0\uFE0F</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#f87171">${alreadySold.action_type==='site_delivered'?'Site d\u00e9j\u00e0 livr\u00e9':'Vente d\u00e9j\u00e0 conclue'}</div>
+        <div style="font-size:10px;color:rgba(248,113,113,0.7)">Le ${soldDate} par ${escHtml(alreadySold.vendor_name)}</div>
+      </div>
+    </div>`;
+  }
+
   const panel=document.getElementById('detailContent');
   let html=`<div style="padding:20px">
+    ${alertHTML}
     <!-- HEADER -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
       <div>
@@ -3446,6 +3470,36 @@ async function openDetail(id){
         <div style="font-size:11px;color:rgba(255,255,255,.5)">${resultLabels[h.result]||h.result||'--'}${h.notes?' · '+escHtml(h.notes):''}</div>
       </div>`).join(''):`<div style="font-size:12px;color:rgba(255,255,255,.25);text-align:center;padding:16px">Aucun appel enregistre</div>`}
     </div>
+
+    <div class="panel-divider"></div>
+
+    <!-- PROSPECT HISTORY -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:12px">Historique (${pHistory.length})</div>
+    ${!pHistory.length?`<div style="font-size:12px;color:rgba(255,255,255,0.2);text-align:center;padding:16px">Aucune action enregistr\u00e9e</div>`:`
+    <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;margin-bottom:20px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent">
+      ${pHistory.map(h=>{
+        const d=new Date(h.created_at);
+        const ds=d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        const icons={status_change:'\uD83D\uDD04',call:'\uD83D\uDCDE',note_added:'\uD83D\uDCDD',email_added:'\uD83D\uDCE7',assigned:'\uD83D\uDC64',sale_won:'\uD83D\uDCB0',site_delivered:'\uD83C\uDF10',contact_added:'\u2795'};
+        const labels={status_change:'Statut modifi\u00e9',call:'Appel pass\u00e9',note_added:'Note ajout\u00e9e',email_added:'Email ajout\u00e9',assigned:'Vendeur assign\u00e9',sale_won:'Vente conclue',site_delivered:'Site livr\u00e9',contact_added:'Contact ajout\u00e9'};
+        const colors={sale_won:'#34d399',site_delivered:'#67e8f9',call:'#a78bfa',status_change:'#fbbf24',note_added:'#f9a8d4',assigned:'#e879f9',email_added:'#67e8f9',contact_added:'#a78bfa'};
+        const ic=icons[h.action_type]||'\u2022';
+        const lb=labels[h.action_type]||h.action_type;
+        const cl=colors[h.action_type]||'rgba(255,255,255,0.4)';
+        return`<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.03);border-left:2px solid ${cl}">
+          <span style="font-size:14px;flex-shrink:0">${ic}</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+              <span style="font-size:11px;font-weight:600;color:${cl}">${lb}</span>
+              <span style="font-size:9px;color:rgba(255,255,255,0.25);flex-shrink:0;margin-left:8px">${ds}</span>
+            </div>
+            ${h.old_value&&h.new_value?`<div style="font-size:10px;color:rgba(255,255,255,0.4)">${escHtml(h.old_value)} \u2192 <span style="color:${cl}">${escHtml(h.new_value)}</span></div>`:h.new_value?`<div style="font-size:10px;color:rgba(255,255,255,0.4)">${escHtml(h.new_value)}</div>`:''}
+            ${h.note?`<div style="font-size:10px;color:rgba(255,255,255,0.3)">${escHtml(h.note)}</div>`:''}
+            <div style="font-size:9px;color:rgba(255,255,255,0.2)">par ${escHtml(h.vendor_name)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`}
 
     <div class="panel-divider"></div>
 
