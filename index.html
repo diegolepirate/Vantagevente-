@@ -2692,9 +2692,12 @@ async function updateData(table,id,fields){
 }
 
 // Single status update — always goes through prospects as source of truth
+let _statusUpdating=false;
 async function updateStatus(source,id,newStatus){
   console.log('updateStatus:',source,id,'→',newStatus);
-  // 1. Optimistic local update
+  _statusUpdating=true;
+
+  // 1. Optimistic local update — update BOTH arrays immediately
   if(source==='prospects'){
     const row=DATA.find(d=>d.id===id);if(row)row.status=newStatus;
     const lc=CLIENTS.find(c=>c.prospect_id===id);if(lc)lc.site_status=newStatus;
@@ -2707,43 +2710,61 @@ async function updateStatus(source,id,newStatus){
     }
   }
 
-  // 2. Immediate UI update (before network)
+  // 2. Immediate UI feedback
   APP.recompute();APP.bindAll();
   statusToast(newStatus);
 
   // 3. Persist to Supabase (both tables in parallel)
   const now=new Date().toISOString();
   if(source==='prospects'){
-    const pUp=sb.from('prospects').update({status:newStatus,updated_at:now}).eq('id',id);
-    const cSync=sb.from('clients').select('id').eq('prospect_id',id).maybeSingle().then(({data:cl})=>{
-      if(cl)return sb.from('clients').update({site_status:newStatus,updated_at:now}).eq('id',cl.id);
-    });
-    await Promise.all([pUp,cSync]);
+    await Promise.all([
+      sb.from('prospects').update({status:newStatus,updated_at:now}).eq('id',id),
+      sb.from('clients').select('id').eq('prospect_id',id).maybeSingle().then(({data:cl})=>{
+        if(cl)return sb.from('clients').update({site_status:newStatus,updated_at:now}).eq('id',cl.id);
+      })
+    ]);
   }else if(source==='clients'){
     const lc=CLIENTS.find(c=>c.id===id);
     const prospectId=lc?lc.prospect_id:null;
-    const cUp=sb.from('clients').update({site_status:newStatus,updated_at:now}).eq('id',id);
-    const pSync=prospectId?sb.from('prospects').update({status:newStatus,updated_at:now}).eq('id',prospectId):Promise.resolve();
-    await Promise.all([cUp,pSync]);
-    // If prospect not in paginated DATA, fetch and inject it so all tabs stay synced
-    if(prospectId&&!DATA.find(d=>d.id===prospectId)){
-      const{data:pRow}=await sb.from('prospects').select('*').eq('id',prospectId).maybeSingle();
-      if(pRow)DATA.push(pRow);
-    }
+    await Promise.all([
+      sb.from('clients').update({site_status:newStatus,updated_at:now}).eq('id',id),
+      prospectId?sb.from('prospects').update({status:newStatus,updated_at:now}).eq('id',prospectId):Promise.resolve()
+    ]);
   }
 
-  // 4. Auto-create client + rappeler
-  if(source==='prospects'){const row=DATA.find(d=>d.id===id);if(row)await autoCreateClient(row,newStatus)}
+  // 4. Auto-create client if needed (prospect→client linking)
+  if(source==='prospects'){
+    let row=DATA.find(d=>d.id===id);
+    if(!row){const{data:p}=await sb.from('prospects').select('*').eq('id',id).maybeSingle();if(p){DATA.push(p);row=p}}
+    if(row)await autoCreateClient(row,newStatus);
+  }
   if(newStatus==='rappeler'){
     const pId=source==='prospects'?id:(CLIENTS.find(c=>c.id===id)||{}).prospect_id;
     const row=pId?DATA.find(d=>d.id===pId):null;
     if(row)setTimeout(()=>showReminderPicker(pId,row.nom||''),300);
   }
 
-  // 5. Refresh global status counts then re-render ALL
-  await fetchStatusCounts();
+  // 5. Full refresh from Supabase — guaranteed consistency across ALL tabs
+  const[,freshClients]=await Promise.all([
+    fetchStatusCounts(),
+    sb.from('clients').select('*').order('created_at',{ascending:false})
+  ]);
+  if(freshClients.data)CLIENTS=freshClients.data;
+
+  // Also sync prospect in DATA if changed from clients
+  if(source==='clients'){
+    const lc=CLIENTS.find(c=>c.id===id);
+    if(lc&&lc.prospect_id){
+      const idx=DATA.findIndex(d=>d.id===lc.prospect_id);
+      if(idx>=0)DATA[idx].status=newStatus;
+      else{const{data:p}=await sb.from('prospects').select('*').eq('id',lc.prospect_id).maybeSingle();if(p)DATA.push(p)}
+    }
+  }
+
+  // 6. Recompute everything and re-render current tab
   APP.recompute();APP.bindAll();
-  render();
+  await render();
+  _statusUpdating=false;
 }
 
 // Field update wrappers
@@ -3856,7 +3877,8 @@ function generatePDFReport(){
 // REALTIME SUBSCRIPTIONS
 // ========================================
 sb.channel('global-sync')
-  .on('postgres_changes',{event:'*',schema:'public',table:'prospects'},p=>{
+  .on('postgres_changes',{event:'*',schema:'public',table:'prospects'},async p=>{
+    if(_statusUpdating)return; // skip — updateStatus handles full sync
     if(p.eventType==='UPDATE'){
       const i=DATA.findIndex(d=>d.id===p.new.id);
       if(p.new.blacklisted){if(i>=0)DATA.splice(i,1)}
@@ -3864,10 +3886,12 @@ sb.channel('global-sync')
     }else if(p.eventType==='INSERT'){
       if(!p.new.blacklisted)DATA.push(p.new);
     }
+    await fetchStatusCounts();
     APP.recompute();APP.bindAll();render();
   })
   .on('postgres_changes',{event:'*',schema:'public',table:'clients'},async()=>{
-    const{data}=await sb.from('clients').select('*').order('id');CLIENTS=data||[];
+    if(_statusUpdating)return; // skip — updateStatus handles full sync
+    const{data}=await sb.from('clients').select('*').order('created_at',{ascending:false});CLIENTS=data||[];
     APP.recompute();APP.bindAll();await render();
   })
   .on('postgres_changes',{event:'*',schema:'public',table:'projects'},async()=>{
