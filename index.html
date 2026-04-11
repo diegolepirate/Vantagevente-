@@ -237,15 +237,13 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .cc-wrap{position:relative;transition:200ms;perspective:800px;-webkit-user-select:none;-moz-user-select:none;user-select:none}
 .cc-wrap:active{transform:scale(.97)}
 .cc-wrap input,.cc-wrap textarea,.cc-wrap select{-webkit-user-select:text;-moz-user-select:text;user-select:text}
-/* Gradient border wrapper (Tiagoadag technique) */
-/* Rotating gradient border (Pradeepsaranbishnoi uiverse) */
-.cc-border{position:relative;display:grid;place-items:center;overflow:hidden;border-radius:20px;box-shadow:rgba(0,0,0,.4) 0px 2px 10px 0px,rgba(0,0,0,.5) 0px 2px 25px 0px}
-.cc-border::before{content:"";position:absolute;width:100%;height:200%;background:linear-gradient(to right,#e879f9,#a855f7,#67e8f9);transform-origin:center;z-index:1;animation:none}
-.cc-border:hover::before{animation:ccGlow 5s linear infinite}
-.cl-glow .cc-border{padding:3px;background-size:300% 300%;animation:projGradient 5s ease infinite;background-image:linear-gradient(#1a1035,#1a1035),linear-gradient(137.48deg,#ffdb3b 10%,#fe53bb 45%,#8f51ea 67%,#0044ff 87%);background-origin:border-box;background-clip:content-box,border-box}
-.cl-glow .cc-border::before{display:none}
-@keyframes ccGlow{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-.cc-card{position:relative;width:96%;margin:2%;z-index:5;border-radius:18px;transition:700ms;background:linear-gradient(45deg,#1a1035,#1f0042);overflow:hidden;box-shadow:rgba(0,0,0,.4) 0px 30px 60px -12px inset,rgba(0,0,0,.5) 0px 18px 36px -18px inset}
+/* Blur light border (05akalan57 uiverse) */
+.cc-border{position:relative;overflow:hidden;border-radius:20px;background:#3d3c3d;drop-shadow:xl}
+.cc-border::before{content:"";position:absolute;width:14rem;height:12rem;background:#fff;filter:blur(50px);left:-50%;top:-50%;z-index:0;opacity:0;transition:opacity .5s}
+.cc-border:hover::before{opacity:1}
+.cl-glow .cc-border::before{opacity:1}
+.cc-card{position:relative;z-index:1;border-radius:18px;transition:700ms;background:#323132;overflow:hidden;margin:2px;opacity:.9}
+.cc-card:hover{opacity:1}
 .cc-card.cc-hover{transition:125ms ease-in-out}
 .cc-card .card-content{position:relative;width:100%;padding:16px;z-index:1}
 
