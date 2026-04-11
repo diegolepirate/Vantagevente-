@@ -1533,8 +1533,11 @@ async function renderProjects(container){
     const salesPct=targetSales>0?Math.min(Math.round(s.won/targetSales*100),100):0;
     const dl=daysLeft(p.deadline);
 
-    html+=`<div style="background:#1a1035;border:1px solid rgba(232,121,249,.2);border-radius:16px;padding:20px;position:relative">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+    const _pSize=getSizeBadge(REGION_COUNTS[p.region]||0);
+    const _isGrand=_pSize.label==='GRAND';
+    html+=`<div style="background:#1a1035;border:1px solid rgba(232,121,249,.2);border-radius:16px;padding:20px;position:relative;overflow:hidden${_isGrand?';background:url(assets/game-icons/bg-grand.png) center/cover no-repeat':''}">
+      ${_isGrand?'<div style="position:absolute;inset:0;background:rgba(26,16,53,.75);z-index:0"></div>':''}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;position:relative;z-index:1">
         <div>
           <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">${escHtml(p.name)}</div>
           ${regionBadgeHtml(p.region)}${p.vendor||p.vendeur?`<div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:2px">${escHtml(p.vendor||p.vendeur)}</div>`:''}
@@ -1544,10 +1547,10 @@ async function renderProjects(container){
           ${dl?`<span style="font-size:10px;color:${dl.includes('Expire')?'#f87171':'rgba(255,255,255,.35)'}">${dl}</span>`:''}
         </div>
       </div>
-      ${p.description?`<div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px">${escHtml(p.description)}</div>`:''}
-      ${families.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">${families.map(f=>`<span style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(217,70,239,.15);color:#d946ef">${escHtml(f)}</span>`).join('')}</div>`:''}
+      ${p.description?`<div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;position:relative;z-index:1">${escHtml(p.description)}</div>`:''}
+      ${families.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;position:relative;z-index:1">${families.map(f=>`<span style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(217,70,239,.15);color:#d946ef">${escHtml(f)}</span>`).join('')}</div>`:''}
 
-      <div style="margin-bottom:14px">
+      <div style="margin-bottom:14px;position:relative;z-index:1">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;gap:4px"><img src="assets/game-icons/icon-appels.png" width="20" height="20" style="object-fit:contain"> Appels</span>
           <span style="font-size:12px;font-weight:700;color:${progColor(callPct)}">${s.called}/${s.total} — ${callPct}%</span>
@@ -1555,7 +1558,7 @@ async function renderProjects(container){
         <div style="height:8px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden"><div style="height:100%;width:${callPct}%;background:linear-gradient(90deg,${progColor(callPct)},${progColor(callPct)}cc);border-radius:8px;transition:width 1s;box-shadow:0 0 8px ${progColor(callPct)}66"></div></div>
       </div>
 
-      <div style="margin-bottom:20px">
+      <div style="margin-bottom:20px;position:relative;z-index:1">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;gap:4px"><img src="assets/game-icons/icon-ventes.png" width="20" height="20" style="object-fit:contain"> Ventes</span>
           <span style="font-size:12px;font-weight:700;color:${progColor(salesPct)}">${s.won}/${targetSales} — ${salesPct}%</span>
@@ -1563,7 +1566,7 @@ async function renderProjects(container){
         <div style="height:8px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden"><div style="height:100%;width:${salesPct}%;background:linear-gradient(90deg,${progColor(salesPct)},${progColor(salesPct)}cc);border-radius:8px;transition:width 1s;box-shadow:0 0 8px ${progColor(salesPct)}66"></div></div>
       </div>
 
-      <div style="display:flex;gap:12px;margin-bottom:16px">
+      <div style="display:flex;gap:12px;margin-bottom:16px;position:relative;z-index:1">
         <div style="flex:1;background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:18px;font-weight:700;color:#67e8f9;font-family:monospace">${s.total}</div>
           <div style="font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px">Total</div>
@@ -1578,7 +1581,7 @@ async function renderProjects(container){
         </div>
       </div>
 
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;position:relative;z-index:1">
         <button onclick="goToProspectsFiltered(${p.id})" style="flex:1;padding:8px;border-radius:8px;background:rgba(232,121,249,.1);border:1px solid rgba(232,121,249,.25);color:#e879f9;font-size:12px;font-weight:600;cursor:pointer">Voir prospects</button>
         <button onclick="toggleProjectStatus(${p.id},'paused')" style="padding:8px 14px;border-radius:8px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:#fbbf24;font-size:12px;cursor:pointer">Pause</button>
         ${isAdmin?`<button onclick="openEditProjectModal(${p.id})" style="padding:8px 14px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:12px;cursor:pointer">Edit</button>`:''}
