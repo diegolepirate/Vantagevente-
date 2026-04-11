@@ -2075,6 +2075,7 @@ async function renderBadges(container){
       html+=`<div class="fn-row${isUn?' fn-done':''}" data-idx="${i}">`;
       html+=`<div class="fn-dot"></div>`;
       html+=`<div class="fn-body"><div class="fn-name">${escHtml(b.name)}</div>`;
+      html+=`<div class="fn-desc" style="font-size:.58rem;color:rgba(255,255,255,.32);margin-bottom:4px">${escHtml(b.desc)}</div>`;
       html+=`<div class="fn-bar"><div class="fn-track"><div class="fn-fill" style="width:${pct}%"></div></div>`;
       html+=`<span class="fn-frac">${cur} / ${max}</span></div></div>`;
       if(isUn){html+=`<div class="fn-chk">\u2705</div>`;}
