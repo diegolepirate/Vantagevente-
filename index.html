@@ -1626,27 +1626,29 @@ async function toggleProjectStatus(id,newStatus){
 function openCreateProjectModal(){
   const FAMILIES=['Restauration','Cafe & Bar','Auto','Beaute','Sante','Commerce','Artisans','Boulangerie','Services'];
   openModal(`
-    <h3>Nouveau <span>Projet</span></h3>
-    <div class="modal-field"><label>Nom du projet *</label><input id="projName" placeholder="Ex: Campagne Crete Est"></div>
-    <div class="modal-field"><label>Region cible *</label>${regionPickerHtml('projRegion','')}</div>
-    <div class="modal-field"><label>Type de prospection</label>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-        <label style="font-size:.75rem;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="projType" value="all" checked onchange="document.getElementById('projFamilies').style.display='none'"> Tous les commerces</label>
-        <label style="font-size:.75rem;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="projType" value="selection" onchange="document.getElementById('projFamilies').style.display='flex'"> Selection par famille</label>
+    <div style="text-align:center">
+      <h3 style="text-align:center;margin-bottom:24px">Nouveau <span>Projet</span></h3>
+      <div class="modal-field" style="text-align:left"><label>Nom du projet *</label><input id="projName" placeholder="Ex: Campagne Crete Est"></div>
+      <div class="modal-field" style="text-align:left"><label>Region cible *</label>${regionPickerHtml('projRegion','')}</div>
+      <div class="modal-field" style="text-align:left"><label>Type de prospection</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          <label style="font-size:.75rem;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="projType" value="all" checked onchange="document.getElementById('projFamilies').style.display='none'"> Tous les commerces</label>
+          <label style="font-size:.75rem;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="radio" name="projType" value="selection" onchange="document.getElementById('projFamilies').style.display='flex'"> Selection par famille</label>
+        </div>
+        <div id="projFamilies" style="display:none;flex-direction:column;gap:6px;margin-top:8px;padding:10px;background:rgba(255,255,255,.03);border-radius:8px">
+          ${FAMILIES.map(f=>`<label style="font-size:.72rem;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" class="fam-check" value="${f}"> ${f}</label>`).join('')}
+        </div>
       </div>
-      <div id="projFamilies" style="display:none;flex-direction:column;gap:6px;margin-top:8px;padding:10px;background:rgba(255,255,255,.03);border-radius:8px">
-        ${FAMILIES.map(f=>`<label style="font-size:.72rem;display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" class="fam-check" value="${f}"> ${f}</label>`).join('')}
+      <div style="display:flex;gap:12px">
+        <div class="modal-field" style="flex:1;text-align:left"><label>Objectif ventes</label><input type="number" id="projTargetSales" value="10" min="1"></div>
+        <div class="modal-field" style="flex:1;text-align:left"><label>Objectif appels</label><input type="number" id="projTargetCalls" value="100" min="1"></div>
       </div>
-    </div>
-    <div style="display:flex;gap:12px">
-      <div class="modal-field" style="flex:1"><label>Objectif ventes</label><input type="number" id="projTargetSales" value="10" min="1"></div>
-      <div class="modal-field" style="flex:1"><label>Objectif appels</label><input type="number" id="projTargetCalls" value="100" min="1"></div>
-    </div>
-    <div class="modal-field"><label>Date limite</label><input type="date" id="projDeadline"></div>
-    <div class="modal-field"><label>Description</label><textarea id="projDesc" placeholder="Description optionnelle..."></textarea></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-accent" onclick="createProject()">Creer le projet</button>
+      <div class="modal-field" style="text-align:left"><label>Date limite</label><input type="date" id="projDeadline"></div>
+      <div class="modal-field" style="text-align:left"><label>Description</label><textarea id="projDesc" placeholder="Description optionnelle..."></textarea></div>
+      <div class="modal-actions" style="justify-content:center;margin-top:24px">
+        <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-accent" onclick="createProject()">Creer le projet</button>
+      </div>
     </div>
   `);
 }
