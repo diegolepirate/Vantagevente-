@@ -2296,7 +2296,7 @@ async function renderBadges(container){
     const list=NEW_BADGES.filter(b=>b.family===fk);
     const famDone=list.filter(b=>unlockedIds.has(b.id)).length;
     const th=FNT[fk];
-    const famTitle=f.label.split(' ').slice(1).join(' ');
+    const famTitle=f.label.replace(/<[^>]*>/g,'').trim();
 
     html+=`<div class="fn-sec" data-fam="${fk}">`;
     html+=`<div class="fn-banner" style="background:${th.banner}">\u2B50 ${famTitle.toUpperCase()} PASS</div>`;
