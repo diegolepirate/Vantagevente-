@@ -2012,7 +2012,7 @@ async function renderLeaderboard(container){
 
   stats.forEach((r,i)=>{
     const rank=i+1;
-    const crown=rank===1?' <span class="lb-crown">&#128081;</span>':'';
+    const crown=rank===1?' <img src="assets/game-icons/icon-crown.png" width="36" height="36" style="object-fit:contain;vertical-align:middle">':'';
     const isMe=r.name===currentUser;
     html+=`<div class="lb-card ${rank===1?'rank-1':''}" style="${isMe?'border-color:var(--green);box-shadow:0 0 16px rgba(52,211,153,.15)':''}">
       <div class="lb-rank r${rank}">#${rank}</div>
