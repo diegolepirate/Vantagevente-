@@ -3219,13 +3219,14 @@ async function openRegionCard(clickedRegion,clickedCount,clickedBadge,clickedBad
     const badge=getSizeBadge(cnt);
     const badgeColor=sizeBadgeColors[badge.label]||'#fff';
     const isActive=r===clickedRegion;
-    const isGrand=badge.label==='GRAND'||badge.label==='G\u00c9ANT';
+    const isGeant=badge.label==='G\u00c9ANT';
+    const isGrand=badge.label==='GRAND'||isGeant;
     const diff=diffMap[badge.label]||diffMap.PETIT;
     const shortName=r.length>25?r.split('\u2014')[0].trim():r;
 
     stripsHtml+=`<div class="ra-strip${isActive?' ra-active':''}" style="--ra-color:${badgeColor}" data-region="${escHtml(r)}" onclick="loadStripContent(this,'${escHtml(r).replace(/'/g,"\\'")}')">
       <span class="ra-strip-label">${escHtml(shortName)}</span>
-      <div class="ra-strip-content" style="${isGrand?'background:url(assets/game-icons/bg-region-grand.png) center/cover;':''}">
+      <div class="ra-strip-content" style="${isGeant?'background:url(assets/game-icons/bg-region-geant.png) center/cover;':isGrand?'background:url(assets/game-icons/bg-region-grand.png) center/cover;':badge.label==='MOYEN'?'background:url(assets/game-icons/bg-region-moyen.png) center/cover;':''}">
         <div style="background:rgba(33,33,33,.85);border-radius:10px;padding:20px;height:100%;overflow-y:auto">
           <div class="rc-title" style="font-size:1.4rem;margin-bottom:4px">${escHtml(r)}</div>
           <span class="rc-badge" style="background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}55;font-size:.7rem;padding:2px 10px;margin-bottom:10px">${badge.label}</span>
