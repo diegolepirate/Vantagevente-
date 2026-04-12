@@ -458,6 +458,7 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .map-container{--city-radius:1.2rem;--city-sign-color-back:#00c080;--city-sign-color-font:#fff;--city-pin-size-font:3.6rem;line-height:1}
 .map-city{border-radius:var(--city-radius);left:calc(var(--x)*1% - var(--city-radius));padding:var(--city-radius);position:absolute;top:calc(var(--y)*1% - var(--city-radius));cursor:pointer}
 .map-city::before{content:"\2022";font-size:var(--city-pin-size-font);left:calc(-50% + var(--city-radius));position:absolute;top:calc(-.65em + var(--city-radius));text-align:center;text-shadow:0 1px 1px #000;width:100%;color:#fff}
+.map-city.pin-castle::before{content:"";background:url(assets/game-icons/pin-castle.png) center/contain no-repeat;width:3.6rem;height:3.6rem;left:calc(-50% + var(--city-radius));top:calc(-1.8rem + var(--city-radius));font-size:0;text-shadow:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
 .map-city::after{clip-path:inset(-.5em 0 0 0);content:var(--pin-icon,"\2302");font-size:var(--city-pin-size-font);left:calc(-50% + var(--city-radius));position:absolute;top:calc(-1em + var(--city-radius));text-align:center;transition:all 300ms ease-out;width:100%;z-index:var(--y)}
 .map-city:hover::after{clip-path:inset(-.5em 0 .5em 0);transform:translateY(.5em)}
 .map-city__label{display:none;left:calc(-5em + 50%);position:absolute;text-align:center;width:10em;z-index:999}
@@ -3365,14 +3366,15 @@ async function renderMap(container){
     const sizePin={PETIT:'\uD83C\uDFE0',MOYEN:'\uD83C\uDFD8\uFE0F',GRAND:'\uD83C\uDFF0',G\u00c9ANT:'\uD83C\uDFF0'}[badge.label]||'\uD83C\uDFE0';
     const sizePinCSS={PETIT:'"\\1F3E0"',MOYEN:'"\\1F3D8"',GRAND:'"\\1F3F0"',G\u00c9ANT:'"\\1F3F0"'}[badge.label]||'"\\1F3E0"';
     const pinScale={PETIT:'1',MOYEN:'1.3',GRAND:'1.6',G\u00c9ANT:'2'}[badge.label]||'1';
+    const pinClass=(badge.label==='GRAND'||badge.label==='G\u00c9ANT')?'pin-castle':'';
     if(proj){
       const s=proj.stats;
       const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
       const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
       const projIcon=callPct>=75?'\u2694\uFE0F':callPct>=40?'\u2692\uFE0F':'\u26FA';
-      allPointsHtml+=`<div class="map-city mc-active" style="--x:${coords.x};--y:${coords.y};--mc-color:${color};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${projIcon}">${escHtml(regionLabel)} ${callPct}%</div></div></div>`;
+      allPointsHtml+=`<div class="map-city mc-active ${pinClass}" style="--x:${coords.x};--y:${coords.y};--mc-color:${color};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${projIcon}">${escHtml(regionLabel)} ${callPct}%</div></div></div>`;
     } else {
-      allPointsHtml+=`<div class="map-city" style="--x:${coords.x};--y:${coords.y};--city-sign-color-back:${badgeColor};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${sizePin}"><span style="color:${badgeColor}">${badge.label}</span> ${escHtml(regionLabel)} ${count.toLocaleString()}</div></div></div>`;
+      allPointsHtml+=`<div class="map-city ${pinClass}" style="--x:${coords.x};--y:${coords.y};--city-sign-color-back:${badgeColor};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${sizePin}"><span style="color:${badgeColor}">${badge.label}</span> ${escHtml(regionLabel)} ${count.toLocaleString()}</div></div></div>`;
     }
   });
 
