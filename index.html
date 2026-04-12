@@ -451,7 +451,14 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .marker-icon{font-size:20px;filter:drop-shadow(0 0 6px var(--color))}
 .marker-label{font-family:'Tanker',sans-serif;font-size:9px;color:var(--color);white-space:nowrap;margin-top:2px;text-shadow:0 0 8px var(--color)}
 .marker-pct{font-size:10px;font-weight:900;color:var(--color);text-shadow:0 0 6px var(--color)}
-.map-legend{position:absolute;bottom:12px;right:12px;background:rgba(10,22,40,.85);border:1px solid rgba(52,211,153,.15);border-radius:10px;padding:10px 14px;font-size:.65rem;color:rgba(255,255,255,.7);display:flex;flex-direction:column;gap:4px}
+.map-legend{position:absolute;bottom:12px;right:12px;background:rgba(10,22,40,.85);border:1px solid rgba(52,211,153,.15);border-radius:10px;padding:10px 14px;font-size:.65rem;color:rgba(255,255,255,.7);display:flex;flex-direction:column;gap:4px;z-index:20}
+.map-zoom-controls{position:absolute;top:12px;left:12px;z-index:20;display:flex;flex-direction:column;gap:4px}
+.map-zoom-controls button{width:32px;height:32px;border-radius:8px;border:1px solid rgba(52,211,153,.2);background:rgba(10,22,40,.85);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.map-zoom-controls button:hover{background:rgba(52,211,153,.2);border-color:rgba(52,211,153,.5)}
+.map-city{position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.city-dot{width:6px;height:6px;background:rgba(255,255,255,.5);border-radius:50%;margin:0 auto 2px;box-shadow:0 0 6px rgba(255,255,255,.3)}
+.city-name{font-size:8px;color:rgba(255,255,255,.55);white-space:nowrap;letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.city-count{font-size:7px;color:rgba(255,255,255,.35);white-space:nowrap}
 .client-card-meta{font-size:.68rem;color:var(--gray);margin-bottom:8px}
 .site-status-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .ss-not_started{background:rgba(139,148,158,.15);color:var(--gray)}
@@ -3074,17 +3081,60 @@ function addClientNote(id){
 // 8b. MAP TAB
 // ========================================
 const MAP_REGION_COORDS={
-  'Attique — Ath\u00e8nes et banlieue':{x:52,y:58},
-  'Mac. Centrale — Thessalonique':{x:48,y:28},
-  'Cr\u00e8te Est — H\u00e9raklion':{x:52,y:88},
-  'Cr\u00e8te Ouest — Chania':{x:42,y:88},
-  '\u00c9g\u00e9e Sud Est — Rhodes, Kos':{x:78,y:80},
-  '\u00c9pire — Ioannina':{x:28,y:38},
-  'Thessalie — Volos, Larissa':{x:50,y:42},
-  'P\u00e9loponn\u00e8se — Kalamata':{x:44,y:70},
-  '\u00celes Ioniennes — Lefkada':{x:22,y:52},
-  '\u00c9g\u00e9e Sud Ouest — Santorin':{x:60,y:80},
+  'Attique \u2014 Ath\u00e8nes et banlieue':{x:52,y:58,city:'Ath\u00e8nes'},
+  'Mac. Centrale \u2014 Thessalonique':{x:48,y:28,city:'Thessalonique'},
+  'Cr\u00e8te Est \u2014 H\u00e9raklion':{x:52,y:88,city:'H\u00e9raklion'},
+  'Cr\u00e8te Ouest \u2014 Chania':{x:42,y:88,city:'Chania'},
+  '\u00c9g\u00e9e Sud Est \u2014 Rhodes, Kos':{x:78,y:80,city:'Rhodes'},
+  '\u00c9pire \u2014 Ioannina':{x:28,y:38,city:'Ioannina'},
+  'Thessalie \u2014 Volos, Larissa':{x:50,y:42,city:'Larissa'},
+  'P\u00e9loponn\u00e8se \u2014 Kalamata':{x:44,y:70,city:'Kalamata'},
+  '\u00celes Ioniennes \u2014 Lefkada':{x:22,y:52,city:'Lefkada'},
+  '\u00c9g\u00e9e Sud Ouest \u2014 Santorin':{x:60,y:80,city:'Santorin'},
+  'Mac. Orientale \u2014 Kavala':{x:58,y:24,city:'Kavala'},
+  'Mac. Occidentale \u2014 Kozani':{x:38,y:30,city:'Kozani'},
+  'Gr\u00e8ce Centrale \u2014 Lamia':{x:48,y:48,city:'Lamia'},
+  'P\u00e9loponn\u00e8se Nord \u2014 Patras':{x:34,y:58,city:'Patras'},
+  'Thrace \u2014 Alexandroupoli':{x:68,y:22,city:'Alexandroupoli'},
+  '\u00c9g\u00e9e Nord \u2014 Lesbos':{x:72,y:42,city:'Lesbos'},
+  'Dodecanese \u2014 Kos':{x:74,y:76,city:'Kos'},
+  'Cyclades \u2014 Mykonos':{x:62,y:68,city:'Mykonos'},
+  'Eub\u00e9e \u2014 Chalcis':{x:56,y:52,city:'Chalcis'},
+  'Argolide \u2014 Nauplie':{x:48,y:62,city:'Nauplie'},
 };
+let mapZoom=1,mapPanX=0,mapPanY=0,_mapDrag=false,_mapDragX=0,_mapDragY=0;
+function initMapZoom(){
+  const ct=document.getElementById('mapZoomArea');
+  if(!ct)return;
+  ct.addEventListener('wheel',function(e){
+    e.preventDefault();
+    const delta=e.deltaY>0?-0.15:0.15;
+    mapZoom=Math.max(1,Math.min(5,mapZoom+delta));
+    applyMapTransform();
+  },{passive:false});
+  ct.addEventListener('mousedown',function(e){if(e.button===0){_mapDrag=true;_mapDragX=e.clientX-mapPanX;_mapDragY=e.clientY-mapPanY;ct.style.cursor='grabbing'}});
+  window.addEventListener('mousemove',function(e){if(_mapDrag){mapPanX=e.clientX-_mapDragX;mapPanY=e.clientY-_mapDragY;applyMapTransform()}});
+  window.addEventListener('mouseup',function(){if(_mapDrag){_mapDrag=false;const ct=document.getElementById('mapZoomArea');if(ct)ct.style.cursor='grab'}});
+  // Touch support
+  let _touchDist=0;
+  ct.addEventListener('touchstart',function(e){
+    if(e.touches.length===2){e.preventDefault();_touchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}
+    if(e.touches.length===1){_mapDrag=true;_mapDragX=e.touches[0].clientX-mapPanX;_mapDragY=e.touches[0].clientY-mapPanY}
+  },{passive:false});
+  ct.addEventListener('touchmove',function(e){
+    if(e.touches.length===2){e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);mapZoom=Math.max(1,Math.min(5,mapZoom*(d/_touchDist)));_touchDist=d;applyMapTransform()}
+    if(e.touches.length===1&&_mapDrag){mapPanX=e.touches[0].clientX-_mapDragX;mapPanY=e.touches[0].clientY-_mapDragY;applyMapTransform()}
+  },{passive:false});
+  ct.addEventListener('touchend',function(){_mapDrag=false});
+}
+function applyMapTransform(){
+  const inner=document.getElementById('mapTransformLayer');
+  if(inner)inner.style.transform=`translate(${mapPanX}px,${mapPanY}px) scale(${mapZoom})`;
+}
+function mapResetZoom(){mapZoom=1;mapPanX=0;mapPanY=0;applyMapTransform()}
+function mapZoomIn(){mapZoom=Math.min(5,mapZoom+0.3);applyMapTransform()}
+function mapZoomOut(){mapZoom=Math.max(1,mapZoom-0.3);applyMapTransform()}
+
 async function renderMap(container){
   const{data:freshProjects}=await sb.from('projects').select('*').order('id');
   if(freshProjects)PROJECTS=freshProjects;
@@ -3101,6 +3151,7 @@ async function renderMap(container){
     return{total:tR.count||0,called:cR.count||0};
   }));
 
+  // Build project markers
   let markersHtml='';
   active.forEach((p,i)=>{
     const coords=MAP_REGION_COORDS[p.region];
@@ -3109,21 +3160,44 @@ async function renderMap(container){
     const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
     const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
     const icon=callPct>=75?'\uD83C\uDFF0':callPct>=40?'\uD83C\uDFD8\uFE0F':'\u26FA';
-    const label=p.region.split('\u2014')[0].trim();
-    markersHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(p.name)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label">${escHtml(label)}</div><div class="marker-pct">${callPct}%</div></div>`;
+    markersHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(p.name)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label">${escHtml(coords.city)}</div><div class="marker-pct">${callPct}%</div></div>`;
   });
+
+  // Build city labels for ALL regions that have prospects (even without active project)
+  let cityLabelsHtml='';
+  const activeRegions=new Set(active.map(p=>p.region));
+  ALL_REGIONS.forEach(r=>{
+    if(activeRegions.has(r))return; // already has a project marker
+    const coords=MAP_REGION_COORDS[r];
+    if(!coords)return;
+    const count=REGION_COUNTS[r]||0;
+    if(count===0)return;
+    cityLabelsHtml+=`<div class="map-city" style="left:${coords.x}%;top:${coords.y}%"><div class="city-dot"></div><div class="city-name">${escHtml(coords.city)}</div><div class="city-count">${count.toLocaleString()}</div></div>`;
+  });
+
+  mapZoom=1;mapPanX=0;mapPanY=0;
 
   container.innerHTML=`<div style="padding:24px">
     <h2 style="font-family:'Tanker',sans-serif;font-size:2rem;text-align:center;margin-bottom:24px;letter-spacing:2px;color:#fff;text-shadow:0 0 20px rgba(52,211,153,.3)">CARTE DE CONQU\u00caTE</h2>
-    <div class="map-container">
-      <div class="map-inner" id="mapSvgWrap" style="position:relative;width:100%;min-height:400px">
-        <div style="text-align:center;padding:80px;color:var(--gray)">Chargement de la carte...</div>
+    <div class="map-container" id="mapZoomArea" style="cursor:grab">
+      <div class="map-zoom-controls">
+        <button onclick="mapZoomIn()" title="Zoom +">+</button>
+        <button onclick="mapResetZoom()" title="Reset" style="font-size:10px">\u21BA</button>
+        <button onclick="mapZoomOut()" title="Zoom -">\u2212</button>
       </div>
-      <div class="map-markers" id="mapMarkers" style="position:absolute;inset:0">${markersHtml}</div>
+      <div id="mapTransformLayer" style="transform-origin:center center;transition:transform .15s ease;position:relative">
+        <div id="mapSvgWrap" style="position:relative;width:100%;min-height:400px">
+          <div style="text-align:center;padding:80px;color:var(--gray)">Chargement de la carte...</div>
+        </div>
+        <div id="mapMarkers" style="position:absolute;inset:0;pointer-events:none">
+          <div style="position:relative;width:100%;height:100%;pointer-events:auto">${markersHtml}${cityLabelsHtml}</div>
+        </div>
+      </div>
       <div class="map-legend">
         <div>\uD83C\uDFF0 R\u00e9gion conquise (75%+)</div>
         <div>\uD83C\uDFD8\uFE0F En progression (40-75%)</div>
         <div>\u26FA D\u00e9but de campagne (&lt;40%)</div>
+        <div style="margin-top:4px;border-top:1px solid rgba(255,255,255,.1);padding-top:4px"><span class="city-dot" style="display:inline-block;width:6px;height:6px;background:rgba(255,255,255,.5);border-radius:50;margin-right:4px"></span> Prospects disponibles</div>
       </div>
     </div>
     ${!active.length?'<div style="text-align:center;padding:40px;color:var(--gray);font-size:.9rem;margin-top:16px">Cr\u00e9ez un projet pour commencer la conqu\u00eate</div>':''}
@@ -3132,10 +3206,7 @@ async function renderMap(container){
   // Load SVG map
   fetch('assets/game-icons/greece-map.svg').then(r=>r.text()).then(svg=>{
     const wrap=document.getElementById('mapSvgWrap');
-    if(wrap){wrap.innerHTML=svg;
-      const markers=document.getElementById('mapMarkers');
-      if(markers)wrap.appendChild(markers);
-    }
+    if(wrap){wrap.innerHTML=svg;initMapZoom()}
   });
 }
 
