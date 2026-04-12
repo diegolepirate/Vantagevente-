@@ -439,6 +439,19 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .client-card.status-preview_sent{border-color:var(--accent);background:rgba(88,166,255,.04)}
 .client-card-name{font-size:.9rem;font-weight:700;margin-bottom:4px}
 .client-card-phone{font-size:.78rem;color:var(--accent);margin-bottom:8px}
+
+/* ====== MAP TAB ====== */
+.map-container{position:relative;width:100%;max-width:900px;margin:0 auto;background:#0a1628;border-radius:16px;border:2px solid rgba(52,211,153,.2);overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.6),inset 0 0 60px rgba(10,22,40,.8);padding:20px}
+.map-svg{width:100%;height:auto;display:block}
+.map-svg path{fill:#2d4a1e;stroke:#4a7c3f;stroke-width:.5px;transition:fill .3s}
+.map-svg path:hover{fill:#3d6428}
+.map-marker{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:10;text-align:center}
+.marker-pulse{position:absolute;width:30px;height:30px;border-radius:50%;border:2px solid var(--color);top:-8px;left:50%;margin-left:-15px;animation:marker-pulse 2s ease-out infinite}
+@keyframes marker-pulse{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.5);opacity:0}}
+.marker-icon{font-size:20px;filter:drop-shadow(0 0 6px var(--color))}
+.marker-label{font-family:'Tanker',sans-serif;font-size:9px;color:var(--color);white-space:nowrap;margin-top:2px;text-shadow:0 0 8px var(--color)}
+.marker-pct{font-size:10px;font-weight:900;color:var(--color);text-shadow:0 0 6px var(--color)}
+.map-legend{position:absolute;bottom:12px;right:12px;background:rgba(10,22,40,.85);border:1px solid rgba(52,211,153,.15);border-radius:10px;padding:10px 14px;font-size:.65rem;color:rgba(255,255,255,.7);display:flex;flex-direction:column;gap:4px}
 .client-card-meta{font-size:.68rem;color:var(--gray);margin-bottom:8px}
 .site-status-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .ss-not_started{background:rgba(139,148,158,.15);color:var(--gray)}
@@ -1254,7 +1267,7 @@ async function render(){
     case 'badges': await renderBadges(content); break;
     case 'notes': renderNotes(content); break;
     case 'clients': await renderClients(content); break;
-    case 'map': renderMap(content); break;
+    case 'map': await renderMap(content); break;
     case 'vendors': renderVendors(content); break;
     case 'logs': await renderLogs(content); break;
     case 'blacklist': renderBlacklist(content); break;
@@ -3060,11 +3073,70 @@ function addClientNote(id){
 // ========================================
 // 8b. MAP TAB
 // ========================================
-function renderMap(container){
+const MAP_REGION_COORDS={
+  'Attique — Ath\u00e8nes et banlieue':{x:52,y:58},
+  'Mac. Centrale — Thessalonique':{x:48,y:28},
+  'Cr\u00e8te Est — H\u00e9raklion':{x:52,y:88},
+  'Cr\u00e8te Ouest — Chania':{x:42,y:88},
+  '\u00c9g\u00e9e Sud Est — Rhodes, Kos':{x:78,y:80},
+  '\u00c9pire — Ioannina':{x:28,y:38},
+  'Thessalie — Volos, Larissa':{x:50,y:42},
+  'P\u00e9loponn\u00e8se — Kalamata':{x:44,y:70},
+  '\u00celes Ioniennes — Lefkada':{x:22,y:52},
+  '\u00c9g\u00e9e Sud Ouest — Santorin':{x:60,y:80},
+};
+async function renderMap(container){
+  const{data:freshProjects}=await sb.from('projects').select('*').order('id');
+  if(freshProjects)PROJECTS=freshProjects;
+  const myProjects=isAdmin?PROJECTS:PROJECTS.filter(p=>p.vendor===currentUser||p.vendeur===currentUser||p.vendeur==='Tous');
+  const active=myProjects.filter(p=>p.status==='active');
+
+  // Fetch stats per active project
+  const projStats=await Promise.all(active.map(async p=>{
+    const region=p.region;
+    const[tR,cR]=await Promise.all([
+      sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',region),
+      sb.from('prospects').select('*',{count:'exact',head:true}).eq('region',region).neq('status','nouveau')
+    ]);
+    return{total:tR.count||0,called:cR.count||0};
+  }));
+
+  let markersHtml='';
+  active.forEach((p,i)=>{
+    const coords=MAP_REGION_COORDS[p.region];
+    if(!coords)return;
+    const s=projStats[i];
+    const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
+    const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
+    const icon=callPct>=75?'\uD83C\uDFF0':callPct>=40?'\uD83C\uDFD8\uFE0F':'\u26FA';
+    const label=p.region.split('\u2014')[0].trim();
+    markersHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(p.name)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label">${escHtml(label)}</div><div class="marker-pct">${callPct}%</div></div>`;
+  });
+
   container.innerHTML=`<div style="padding:24px">
-    <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:16px">Map</h2>
-    <div style="color:var(--gray);font-size:.85rem">Onglet Map — contenu à venir.</div>
+    <h2 style="font-family:'Tanker',sans-serif;font-size:2rem;text-align:center;margin-bottom:24px;letter-spacing:2px;color:#fff;text-shadow:0 0 20px rgba(52,211,153,.3)">CARTE DE CONQU\u00caTE</h2>
+    <div class="map-container">
+      <div class="map-inner" id="mapSvgWrap" style="position:relative;width:100%;min-height:400px">
+        <div style="text-align:center;padding:80px;color:var(--gray)">Chargement de la carte...</div>
+      </div>
+      <div class="map-markers" id="mapMarkers" style="position:absolute;inset:0">${markersHtml}</div>
+      <div class="map-legend">
+        <div>\uD83C\uDFF0 R\u00e9gion conquise (75%+)</div>
+        <div>\uD83C\uDFD8\uFE0F En progression (40-75%)</div>
+        <div>\u26FA D\u00e9but de campagne (&lt;40%)</div>
+      </div>
+    </div>
+    ${!active.length?'<div style="text-align:center;padding:40px;color:var(--gray);font-size:.9rem;margin-top:16px">Cr\u00e9ez un projet pour commencer la conqu\u00eate</div>':''}
   </div>`;
+
+  // Load SVG map
+  fetch('assets/game-icons/greece-map.svg').then(r=>r.text()).then(svg=>{
+    const wrap=document.getElementById('mapSvgWrap');
+    if(wrap){wrap.innerHTML=svg;
+      const markers=document.getElementById('mapMarkers');
+      if(markers)wrap.appendChild(markers);
+    }
+  });
 }
 
 // 9. VENDORS TAB (Admin)
