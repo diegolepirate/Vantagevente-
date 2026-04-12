@@ -2763,7 +2763,7 @@ async function renderClients(container){
         <div class="card-glare"></div>
         <div class="card-content">
           <button class="rm-b" onclick="event.stopPropagation();hideClient(${c.id})" style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;font-size:12px;cursor:pointer;opacity:0;transition:opacity .2s;line-height:1;display:flex;align-items:center;justify-content:center;z-index:2">\u2715</button>
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;padding-right:24px">${escHtml(c.business_name||'')}</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;padding-right:24px;display:flex;align-items:center;gap:6px">${escHtml(c.business_name||'')}${c.prospect_id?`<button onclick="event.stopPropagation();openDetail(${c.prospect_id})" style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);color:#a855f7;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s" title="Voir fiche prospect">\uD83D\uDCCB</button>`:''}</div>
           <span style="font-size:10px;font-weight:700;color:${sc.color};margin-bottom:10px;display:inline-block">${sc.label}</span>
           <select onchange="updateClientField(${c.id},'site_status',this.value)" style="width:100%;background:#1a1035;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;margin-bottom:10px;outline:none;cursor:pointer;box-sizing:border-box">${sOpts}</select>
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
@@ -3738,12 +3738,11 @@ async function saveReminder(prospectId,name){
 // DETAIL PANEL
 // ========================================
 async function openDetail(id){
-  const row=DATA.find(d=>d.id===id);
+  let row=DATA.find(d=>d.id===id);
   if(!row){
     const{data:fresh}=await sb.from('prospects').select('*').eq('id',id).single();
     if(!fresh)return;
-    Object.assign(row||{},fresh);
-    if(!row)return;
+    row=fresh;
   }
 
   const[{data:callHist},{data:prospectHist}]=await Promise.all([
