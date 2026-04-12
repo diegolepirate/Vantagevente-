@@ -473,6 +473,15 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 /* Region info card popup */
 .region-card-overlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);justify-content:center;align-items:center}
 .region-card-overlay.active{display:flex}
+/* Accordion container */
+.region-accordion{display:flex;gap:5px;padding:.4em;background:#212121;border-radius:8px;height:580px;max-width:95vw;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.region-accordion .ra-strip{height:100%;flex:1;overflow:hidden;cursor:pointer;border-radius:4px;transition:all .5s;background:#212121;border:1px solid var(--ra-color,#ff5a91);display:flex;justify-content:center;align-items:center;position:relative;min-width:0}
+.region-accordion .ra-strip:hover,.region-accordion .ra-strip.ra-active{flex:6}
+.region-accordion .ra-strip-label{min-width:14em;padding:.5em;text-align:center;transform:rotate(-90deg);transition:all .5s;text-transform:uppercase;color:var(--ra-color,#ff568e);letter-spacing:.1em;font-weight:700;font-size:.85rem;white-space:nowrap}
+.region-accordion .ra-strip:hover .ra-strip-label,.region-accordion .ra-strip.ra-active .ra-strip-label{transform:rotate(0)}
+.region-accordion .ra-strip-content{display:none;position:absolute;inset:0;padding:24px;overflow-y:auto}
+.region-accordion .ra-strip:hover .ra-strip-content,.region-accordion .ra-strip.ra-active .ra-strip-content{display:block}
+.region-accordion .ra-strip:hover .ra-strip-label,.region-accordion .ra-strip.ra-active .ra-strip-label{display:none}
 .region-card{position:relative;width:1020px;overflow:hidden;border-radius:16px;background:#3d3c3d;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .region-card-inner{position:relative;z-index:1;border-radius:14px;margin:2px;background:#323132;overflow:hidden;opacity:.95}
 .region-card-bg{position:absolute;inset:0;z-index:0;opacity:.25}
@@ -3190,48 +3199,77 @@ function applyMapTransform(){
   const inner=document.getElementById('mapTransformLayer');
   if(inner)inner.style.transform=`translate(${mapPanX}px,${mapPanY}px) scale(${mapZoom})`;
 }
-async function openRegionCard(region,count,badgeLabel,badgeColor){
+async function openRegionCard(clickedRegion,clickedCount,clickedBadge,clickedBadgeColor){
   const overlay=document.getElementById('regionCardOverlay');
   if(!overlay)return;
-  // Fetch top families in this region
+
+  const sizeBadgeColors={PETIT:'#3b82f6',MOYEN:'#f59e0b',GRAND:'#ef4444',G\u00c9ANT:'#a855f7'};
+  const diffMap={PETIT:{pct:25,color:'#34d399',label:'Facile'},MOYEN:{pct:50,color:'#fbbf24',label:'Moyen'},GRAND:{pct:75,color:'#f97316',label:'Difficile'},G\u00c9ANT:{pct:95,color:'#ef4444',label:'Tr\u00e8s difficile'}};
+
+  // Build list of all regions with prospects
+  const regions=ALL_REGIONS.filter(r=>(REGION_COUNTS[r]||0)>0);
+
+  // Sort so clicked region is first
+  regions.sort((a,b)=>a===clickedRegion?-1:b===clickedRegion?1:0);
+
+  // Build strips HTML
+  let stripsHtml='';
+  for(const r of regions){
+    const cnt=REGION_COUNTS[r]||0;
+    const badge=getSizeBadge(cnt);
+    const badgeColor=sizeBadgeColors[badge.label]||'#fff';
+    const isActive=r===clickedRegion;
+    const isGrand=badge.label==='GRAND'||badge.label==='G\u00c9ANT';
+    const diff=diffMap[badge.label]||diffMap.PETIT;
+    const shortName=r.length>25?r.split('\u2014')[0].trim():r;
+
+    stripsHtml+=`<div class="ra-strip${isActive?' ra-active':''}" style="--ra-color:${badgeColor}" data-region="${escHtml(r)}" onclick="loadStripContent(this,'${escHtml(r).replace(/'/g,"\\'")}')">
+      <span class="ra-strip-label">${escHtml(shortName)}</span>
+      <div class="ra-strip-content" style="${isGrand?'background:url(assets/game-icons/bg-region-grand.png) center/cover;':''}">
+        <div style="background:rgba(33,33,33,.85);border-radius:10px;padding:20px;height:100%;overflow-y:auto">
+          <div class="rc-title" style="font-size:1.4rem;margin-bottom:4px">${escHtml(r)}</div>
+          <span class="rc-badge" style="background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}55;font-size:.7rem;padding:2px 10px;margin-bottom:10px">${badge.label}</span>
+          <div class="rc-stats" style="grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;display:grid">
+            <div class="rc-stat" style="padding:10px"><div class="rc-stat-val" style="font-size:1.4rem">${cnt.toLocaleString()}</div><div class="rc-stat-lbl" style="font-size:.6rem">Prospects</div></div>
+            <div class="rc-stat" style="padding:10px"><div class="rc-stat-val" style="font-size:1rem">${diff.label}</div><div class="rc-stat-lbl" style="font-size:.6rem">Difficult\u00e9</div></div>
+          </div>
+          <div class="rc-diff-bar" style="margin-bottom:10px"><div class="rc-diff-fill" style="width:${diff.pct}%;background:${diff.color}"></div></div>
+          <div class="rc-families" style="border-top:1px solid rgba(255,255,255,.08);padding-top:8px">
+            <div class="rc-fam-title" style="font-size:.6rem">Commerces</div>
+            <div class="rc-fam-list" id="fam_${r.replace(/[^a-zA-Z0-9]/g,'_')}" style="display:flex;flex-wrap:wrap;gap:4px">
+              <span style="color:rgba(255,255,255,.3);font-size:.6rem">Chargement...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  overlay.innerHTML=`<div style="position:relative">
+    <button class="rc-close" onclick="closeRegionCard()" style="position:absolute;top:-40px;right:0;z-index:10">\u2715</button>
+    <div class="region-accordion">${stripsHtml}</div>
+  </div>`;
+  overlay.classList.add('active');
+
+  // Load families for the clicked region immediately
+  loadStripFamilies(clickedRegion);
+}
+
+async function loadStripFamilies(region){
+  const safeId='fam_'+region.replace(/[^a-zA-Z0-9]/g,'_');
+  const el=document.getElementById(safeId);
+  if(!el||el.dataset.loaded)return;
+  el.dataset.loaded='1';
   const{data:famData}=await sb.from('prospects').select('famille').eq('region',region).limit(500);
   const famCount={};
   (famData||[]).forEach(d=>{if(d.famille){famCount[d.famille]=(famCount[d.famille]||0)+1}});
   const topFams=Object.entries(famCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const topFamHtml=topFams.map(f=>`<span class="rc-fam-tag">${escHtml(f[0])} (${f[1]})</span>`).join('');
-  const majority=topFams.length?topFams[0][0]:'—';
+  el.innerHTML=topFams.length?topFams.map(f=>`<span class="rc-fam-tag" style="font-size:.6rem;padding:2px 8px">${escHtml(f[0])} (${f[1]})</span>`).join(''):'<span style="color:rgba(255,255,255,.3);font-size:.6rem">Aucune</span>';
+}
 
-  // Difficulty based on size
-  const diffMap={PETIT:{pct:25,color:'#34d399',label:'Facile'},MOYEN:{pct:50,color:'#fbbf24',label:'Moyen'},GRAND:{pct:75,color:'#f97316',label:'Difficile'},G\u00c9ANT:{pct:95,color:'#ef4444',label:'Tr\u00e8s difficile'}};
-  const diff=diffMap[badgeLabel]||diffMap.PETIT;
-  const isGrand=badgeLabel==='GRAND'||badgeLabel==='G\u00c9ANT';
-
-  overlay.innerHTML=`<div class="region-card">
-    <div class="rc-glow"></div>
-    <div class="region-card-inner">
-      ${isGrand?'<div class="region-card-bg"><img src="assets/game-icons/bg-region-grand.png"></div>':''}
-      <div class="region-card-content">
-        <button class="rc-close" onclick="closeRegionCard()">\u2715</button>
-        <div class="rc-title">${escHtml(region)}</div>
-        <span class="rc-badge" style="background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}55">${badgeLabel}</span>
-        <div class="rc-stats">
-          <div class="rc-stat"><div class="rc-stat-val">${count.toLocaleString()}</div><div class="rc-stat-lbl">Prospects</div></div>
-          <div class="rc-stat"><div class="rc-stat-val">${escHtml(majority)}</div><div class="rc-stat-lbl">Majorit\u00e9</div></div>
-          <div class="rc-stat"><div class="rc-stat-val">${topFams.length}</div><div class="rc-stat-lbl">Familles</div></div>
-          <div class="rc-stat"><div class="rc-stat-val">${diff.label}</div><div class="rc-stat-lbl">Difficult\u00e9</div></div>
-        </div>
-        <div class="rc-difficulty">
-          <div style="font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px">Niveau de difficult\u00e9</div>
-          <div class="rc-diff-bar"><div class="rc-diff-fill" style="width:${diff.pct}%;background:${diff.color}"></div></div>
-        </div>
-        <div class="rc-families">
-          <div class="rc-fam-title">Commerces sur place</div>
-          <div class="rc-fam-list">${topFamHtml||'<span style="color:rgba(255,255,255,.3);font-size:.65rem">Aucune donn\u00e9e</span>'}</div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-  overlay.classList.add('active');
+function loadStripContent(strip,region){
+  // Load families on click/hover
+  loadStripFamilies(region);
 }
 function closeRegionCard(){
   const overlay=document.getElementById('regionCardOverlay');
