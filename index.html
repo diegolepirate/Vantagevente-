@@ -441,10 +441,14 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .client-card-phone{font-size:.78rem;color:var(--accent);margin-bottom:8px}
 
 /* ====== MAP TAB ====== */
-.map-container{position:relative;width:100%;max-width:900px;margin:0 auto;background:#0a1628;border-radius:16px;border:2px solid rgba(52,211,153,.2);overflow:hidden;box-shadow:0 0 40px rgba(0,0,0,.6),inset 0 0 60px rgba(10,22,40,.8);padding:20px;transition:all .4s ease}
-.map-container.map-fullscreen{position:fixed;inset:0;z-index:9999;max-width:none;border-radius:0;border:none;padding:20px;margin:0}
-.map-expand-btn{position:absolute;top:12px;right:12px;z-index:21;width:34px;height:34px;border-radius:8px;border:1px solid rgba(52,211,153,.2);background:rgba(10,22,40,.85);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
-.map-expand-btn:hover{background:rgba(52,211,153,.2);border-color:rgba(52,211,153,.5)}
+.map-card-wrap{width:100%;max-width:900px;margin:0 auto;border-radius:30px;background:#1a1a2e;box-shadow:15px 15px 30px #0a0a15,-15px -15px 30px #2a2a45;padding:6px;cursor:pointer;transition:all .4s ease}
+.map-card-wrap:hover{box-shadow:20px 20px 40px #080812,-20px -20px 40px #2c2c48}
+.map-card-wrap.map-fullscreen{position:fixed;inset:0;z-index:9999;max-width:none;border-radius:0;padding:0;margin:0;cursor:default;box-shadow:none}
+.map-container{position:relative;width:100%;height:100%;background:#0a1628;border-radius:26px;overflow:hidden;padding:20px;transition:border-radius .4s ease}
+.map-card-wrap.map-fullscreen .map-container{border-radius:0}
+.map-close-btn{display:none;position:absolute;top:16px;right:16px;z-index:21;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(10,22,40,.9);color:#fff;font-size:18px;cursor:pointer;align-items:center;justify-content:center;transition:.2s}
+.map-close-btn:hover{background:rgba(255,80,80,.3);border-color:rgba(255,80,80,.5)}
+.map-card-wrap.map-fullscreen .map-close-btn{display:flex}
 .map-svg{width:100%;height:auto;display:block}
 .map-svg path{fill:#2d4a1e;stroke:#4a7c3f;stroke-width:.5px;transition:fill .3s}
 .map-svg path:hover{fill:#3d6428}
@@ -3162,17 +3166,16 @@ function applyMapTransform(){
   const inner=document.getElementById('mapTransformLayer');
   if(inner)inner.style.transform=`translate(${mapPanX}px,${mapPanY}px) scale(${mapZoom})`;
 }
-function toggleMapFullscreen(){
-  const mc=document.getElementById('mapZoomArea');
-  const btn=document.getElementById('mapExpandBtn');
-  if(!mc)return;
-  mc.classList.toggle('map-fullscreen');
-  if(mc.classList.contains('map-fullscreen')){
-    btn.innerHTML='\u2715';btn.title='Fermer';
-  } else {
-    btn.innerHTML='\u26F6';btn.title='Agrandir';
-    mapResetZoom();
-  }
+function activateMapFullscreen(e){
+  const wrap=document.getElementById('mapCardWrap');
+  if(!wrap||wrap.classList.contains('map-fullscreen'))return;
+  wrap.classList.add('map-fullscreen');
+}
+function closeMapFullscreen(){
+  const wrap=document.getElementById('mapCardWrap');
+  if(!wrap)return;
+  wrap.classList.remove('map-fullscreen');
+  mapResetZoom();
 }
 function openVillageMap(region,count,badge,color){
   window.open(`village-map.html?region=${encodeURIComponent(region)}&count=${count}&badge=${badge}&color=${encodeURIComponent(color)}`,'_blank');
@@ -3237,8 +3240,9 @@ async function renderMap(container){
 
   container.innerHTML=`<div style="padding:24px">
     <h2 style="font-family:'Tanker',sans-serif;font-size:2rem;text-align:center;margin-bottom:24px;letter-spacing:2px;color:#fff;text-shadow:0 0 20px rgba(52,211,153,.3)">CARTE DE CONQU\u00caTE</h2>
+    <div class="map-card-wrap" id="mapCardWrap" onclick="activateMapFullscreen(event)">
     <div class="map-container" id="mapZoomArea" style="cursor:grab">
-      <button class="map-expand-btn" id="mapExpandBtn" onclick="toggleMapFullscreen()" title="Agrandir">\u26F6</button>
+      <button class="map-close-btn" id="mapCloseBtn" onclick="event.stopPropagation();closeMapFullscreen()">\u2715</button>
       <div class="map-zoom-controls">
         <button onclick="mapZoomIn()" title="Zoom +">+</button>
         <button onclick="mapResetZoom()" title="Reset" style="font-size:10px">\u21BA</button>
@@ -3258,6 +3262,7 @@ async function renderMap(container){
         <div>\u26FA D\u00e9but de campagne (&lt;40%)</div>
         <div style="margin-top:4px;border-top:1px solid rgba(255,255,255,.1);padding-top:4px"><span style="display:inline-block;width:6px;height:6px;background:rgba(255,255,255,.5);border-radius:50%;margin-right:4px"></span> Prospects (sans projet)</div>
       </div>
+    </div>
     </div>
     ${!active.length?'<div style="text-align:center;padding:40px;color:var(--gray);font-size:.9rem;margin-top:16px">Cr\u00e9ez un projet pour commencer la conqu\u00eate</div>':''}
   </div>`;
