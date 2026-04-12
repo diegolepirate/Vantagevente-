@@ -3240,6 +3240,7 @@ async function openRegionCard(clickedRegion,clickedCount,clickedBadge,clickedBad
               <span style="color:rgba(255,255,255,.3);font-size:.6rem">Chargement...</span>
             </div>
           </div>
+          <button onclick="event.stopPropagation();quickCreateProject('${escHtml(r).replace(/'/g,"\\'")}')" style="margin-top:14px;width:100%;padding:10px 0;border:1px solid var(--ra-color,#C9A84C);background:transparent;color:var(--ra-color,#C9A84C);border-radius:8px;font-size:.75rem;cursor:pointer;transition:all .3s;letter-spacing:1px" onmouseover="this.style.background=this.style.color;this.style.color='#111'" onmouseout="this.style.color=this.style.borderColor;this.style.background='transparent'">+ Ajouter ce projet</button>
         </div>
       </div>
     </div>`;
@@ -3274,6 +3275,33 @@ function loadStripContent(strip,region){
 function closeRegionCard(){
   const overlay=document.getElementById('regionCardOverlay');
   if(overlay){overlay.classList.remove('active');overlay.innerHTML=''}
+}
+
+async function quickCreateProject(region){
+  const name='Projet '+region;
+  const vendeur=currentUser;
+  const fullData={name,region,vendeur,status:'active',vendor:vendeur,type:'all',families:'[]',target_sales:10,target_calls:100};
+  let{data:insData,error:insErr}=await sb.from('projects').insert([fullData]).select();
+  if(insErr){
+    const minData={name,region,vendeur,status:'active'};
+    ({data:insData,error:insErr}=await sb.from('projects').insert([minData]).select());
+  }
+  if(insErr){showToast('Erreur',insErr.message||'Echec creation','var(--red)');return;}
+  const project=insData&&insData[0];
+  if(project)PROJECTS.push(project);
+  showToast('Projet créé',name,'var(--green)');
+  closeRegionCard();
+  _statusUpdating=true;
+  try{
+    if(project)await assignProspectsToProject(project);
+  }finally{
+    const[,freshClients]=await Promise.all([fetchStatusCounts(),fetchAllClients()]);
+    if(freshClients)CLIENTS=freshClients;
+    _statusUpdating=false;
+  }
+  currentTab='projects';
+  APP.recompute();APP.bindAll();
+  await render();
 }
 
 function activateMapFullscreen(e){
