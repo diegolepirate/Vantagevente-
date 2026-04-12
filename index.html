@@ -2745,7 +2745,7 @@ async function renderClients(container){
           <span style="font-size:10px;font-weight:700;color:${sc.color};margin-bottom:10px;display:inline-block">${sc.label}</span>
           <select onchange="updateClientField(${c.id},'site_status',this.value)" style="width:100%;background:#1a1035;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;margin-bottom:10px;outline:none;cursor:pointer;box-sizing:border-box">${sOpts}</select>
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
-            ${c.phone?`<div style="font-family:monospace;font-size:11px;color:#a78bfa">\uD83D\uDCDE ${escHtml(c.phone)}</div>`:''}
+            ${c.phone?`<div style="font-family:monospace;font-size:14px;color:#a78bfa">\uD83D\uDCDE ${escHtml(c.phone)}</div>`:''}
             ${c.email?`<div style="font-size:11px;color:rgba(255,255,255,.4)">\uD83D\uDCE7 ${escHtml(c.email)}</div>`:''}
             ${c.region?`<div style="font-size:10px;color:rgba(255,255,255,.25)">\uD83D\uDCCD ${escHtml(c.region)}</div>`:''}
           </div>
