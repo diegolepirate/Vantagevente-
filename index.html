@@ -3358,6 +3358,7 @@ async function renderMap(container){
   // Build ALL city points - every region with prospects gets a dot
   let allPointsHtml='';
   const sizeBadgeColors={PETIT:'#3b82f6',MOYEN:'#f59e0b',GRAND:'#ef4444',G\u00c9ANT:'#a855f7'};
+  const mapStats={PETIT:{total:0,proj:0},MOYEN:{total:0,proj:0},GRAND:{total:0,proj:0},G\u00c9ANT:{total:0,proj:0}};
   ALL_REGIONS.forEach(r=>{
     const coords=getMapCoords(r);
     if(!coords)return;
@@ -3366,6 +3367,7 @@ async function renderMap(container){
     const badge=getSizeBadge(count);
     const badgeColor=sizeBadgeColors[badge.label]||'#fff';
     const proj=projByRegion[r];
+    if(mapStats[badge.label]){mapStats[badge.label].total++;if(proj)mapStats[badge.label].proj++;}
     const regionLabel=r.length>30?r.split('\u2014')[0].trim():r;
     const cityClick=`onclick="event.stopPropagation();openRegionCard('${escHtml(r).replace(/'/g,"\\\\'")}',${count},'${badge.label}','${badgeColor}')"`;
     // Pin icon by size: GÉANT=castle, GRAND=fortress, MOYEN=village, PETIT=house
@@ -3401,10 +3403,10 @@ async function renderMap(container){
         </div>
       </div>
       <div class="map-legend">
-        <div>\uD83C\uDFF0 R\u00e9gion conquise (75%+)</div>
-        <div>\uD83C\uDFD8\uFE0F En progression (40-75%)</div>
-        <div>\u26FA D\u00e9but de campagne (&lt;40%)</div>
-        <div style="margin-top:4px;border-top:1px solid rgba(255,255,255,.1);padding-top:4px"><span style="display:inline-block;width:6px;height:6px;background:rgba(255,255,255,.5);border-radius:50%;margin-right:4px"></span> Prospects (sans projet)</div>
+        <div style="display:flex;align-items:center;gap:6px"><img src="assets/game-icons/pin-fortress.png" style="width:20px;height:20px"> Forteresse <span style="color:#a855f7">${mapStats['G\u00c9ANT'].proj}/${mapStats['G\u00c9ANT'].total}</span> <span style="color:rgba(255,255,255,.4)">(${mapStats['G\u00c9ANT'].total?Math.round(mapStats['G\u00c9ANT'].proj/mapStats['G\u00c9ANT'].total*100):0}%)</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><img src="assets/game-icons/pin-castle.png" style="width:20px;height:20px"> Ch\u00e2teau <span style="color:#ef4444">${mapStats.GRAND.proj}/${mapStats.GRAND.total}</span> <span style="color:rgba(255,255,255,.4)">(${mapStats.GRAND.total?Math.round(mapStats.GRAND.proj/mapStats.GRAND.total*100):0}%)</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><img src="assets/game-icons/pin-village.png" style="width:20px;height:20px"> Village <span style="color:#f59e0b">${mapStats.MOYEN.proj}/${mapStats.MOYEN.total}</span> <span style="color:rgba(255,255,255,.4)">(${mapStats.MOYEN.total?Math.round(mapStats.MOYEN.proj/mapStats.MOYEN.total*100):0}%)</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><img src="assets/game-icons/pin-market.png" style="width:20px;height:20px"> March\u00e9 <span style="color:#3b82f6">${mapStats.PETIT.proj}/${mapStats.PETIT.total}</span> <span style="color:rgba(255,255,255,.4)">(${mapStats.PETIT.total?Math.round(mapStats.PETIT.proj/mapStats.PETIT.total*100):0}%)</span></div>
       </div>
     </div>
     </div>
