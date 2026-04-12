@@ -455,10 +455,11 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .map-zoom-controls{position:absolute;top:12px;left:12px;z-index:20;display:flex;flex-direction:column;gap:4px}
 .map-zoom-controls button{width:32px;height:32px;border-radius:8px;border:1px solid rgba(52,211,153,.2);background:rgba(10,22,40,.85);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
 .map-zoom-controls button:hover{background:rgba(52,211,153,.2);border-color:rgba(52,211,153,.5)}
-.map-city{position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
-.city-dot{width:6px;height:6px;background:rgba(255,255,255,.5);border-radius:50%;margin:0 auto 2px;box-shadow:0 0 6px rgba(255,255,255,.3)}
-.city-name{font-size:8px;color:rgba(255,255,255,.55);white-space:nowrap;letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-.city-count{font-size:7px;color:rgba(255,255,255,.35);white-space:nowrap}
+.map-city{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:default}
+.city-dot{width:8px;height:8px;background:rgba(255,255,255,.6);border-radius:50%;margin:0 auto 3px;box-shadow:0 0 8px rgba(255,255,255,.4);transition:.2s}
+.map-city:hover .city-dot{background:#fff;box-shadow:0 0 14px rgba(255,255,255,.7);transform:scale(1.4)}
+.city-name{font-size:9px;color:rgba(255,255,255,.7);white-space:nowrap;letter-spacing:.5px;text-shadow:0 1px 4px rgba(0,0,0,.9);font-weight:600}
+.city-count{font-size:8px;color:rgba(255,255,255,.4);white-space:nowrap}
 .client-card-meta{font-size:.68rem;color:var(--gray);margin-bottom:8px}
 .site-status-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .ss-not_started{background:rgba(139,148,158,.15);color:var(--gray)}
@@ -3151,28 +3152,29 @@ async function renderMap(container){
     return{total:tR.count||0,called:cR.count||0};
   }));
 
-  // Build project markers
-  let markersHtml='';
-  active.forEach((p,i)=>{
-    const coords=MAP_REGION_COORDS[p.region];
-    if(!coords)return;
-    const s=projStats[i];
-    const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
-    const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
-    const icon=callPct>=75?'\uD83C\uDFF0':callPct>=40?'\uD83C\uDFD8\uFE0F':'\u26FA';
-    markersHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(p.name)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label">${escHtml(coords.city)}</div><div class="marker-pct">${callPct}%</div></div>`;
-  });
+  // Build active project lookup
+  const projByRegion={};
+  active.forEach((p,i)=>{projByRegion[p.region]={project:p,stats:projStats[i]}});
 
-  // Build city labels for ALL regions that have prospects (even without active project)
-  let cityLabelsHtml='';
-  const activeRegions=new Set(active.map(p=>p.region));
+  // Build ALL city points - every region with prospects gets a dot
+  let allPointsHtml='';
   ALL_REGIONS.forEach(r=>{
-    if(activeRegions.has(r))return; // already has a project marker
     const coords=MAP_REGION_COORDS[r];
     if(!coords)return;
     const count=REGION_COUNTS[r]||0;
     if(count===0)return;
-    cityLabelsHtml+=`<div class="map-city" style="left:${coords.x}%;top:${coords.y}%"><div class="city-dot"></div><div class="city-name">${escHtml(coords.city)}</div><div class="city-count">${count.toLocaleString()}</div></div>`;
+    const proj=projByRegion[r];
+    if(proj){
+      // Active project region = colored marker with pulse
+      const s=proj.stats;
+      const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
+      const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
+      const icon=callPct>=75?'\uD83C\uDFF0':callPct>=40?'\uD83C\uDFD8\uFE0F':'\u26FA';
+      allPointsHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(proj.project.name)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label" style="color:${color};font-size:11px;text-shadow:0 0 10px ${color}">${escHtml(coords.city)}</div><div class="marker-pct">${callPct}% \u2022 ${count.toLocaleString()}</div></div>`;
+    } else {
+      // No project = simple white dot with city name
+      allPointsHtml+=`<div class="map-city" style="left:${coords.x}%;top:${coords.y}%"><div class="city-dot"></div><div class="city-name">${escHtml(coords.city)}</div><div class="city-count">${count.toLocaleString()} prospects</div></div>`;
+    }
   });
 
   mapZoom=1;mapPanX=0;mapPanY=0;
@@ -3190,14 +3192,14 @@ async function renderMap(container){
           <div style="text-align:center;padding:80px;color:var(--gray)">Chargement de la carte...</div>
         </div>
         <div id="mapMarkers" style="position:absolute;inset:0;pointer-events:none">
-          <div style="position:relative;width:100%;height:100%;pointer-events:auto">${markersHtml}${cityLabelsHtml}</div>
+          <div style="position:relative;width:100%;height:100%;pointer-events:auto">${allPointsHtml}</div>
         </div>
       </div>
       <div class="map-legend">
         <div>\uD83C\uDFF0 R\u00e9gion conquise (75%+)</div>
         <div>\uD83C\uDFD8\uFE0F En progression (40-75%)</div>
         <div>\u26FA D\u00e9but de campagne (&lt;40%)</div>
-        <div style="margin-top:4px;border-top:1px solid rgba(255,255,255,.1);padding-top:4px"><span class="city-dot" style="display:inline-block;width:6px;height:6px;background:rgba(255,255,255,.5);border-radius:50;margin-right:4px"></span> Prospects disponibles</div>
+        <div style="margin-top:4px;border-top:1px solid rgba(255,255,255,.1);padding-top:4px"><span style="display:inline-block;width:6px;height:6px;background:rgba(255,255,255,.5);border-radius:50%;margin-right:4px"></span> Prospects (sans projet)</div>
       </div>
     </div>
     ${!active.length?'<div style="text-align:center;padding:40px;color:var(--gray);font-size:.9rem;margin-top:16px">Cr\u00e9ez un projet pour commencer la conqu\u00eate</div>':''}
