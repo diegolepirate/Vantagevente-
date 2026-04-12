@@ -3081,28 +3081,48 @@ function addClientNote(id){
 // ========================================
 // 8b. MAP TAB
 // ========================================
-const MAP_REGION_COORDS={
-  'Attique \u2014 Ath\u00e8nes et banlieue':{x:52,y:58,city:'Ath\u00e8nes'},
-  'Mac. Centrale \u2014 Thessalonique':{x:48,y:28,city:'Thessalonique'},
-  'Cr\u00e8te Est \u2014 H\u00e9raklion':{x:52,y:88,city:'H\u00e9raklion'},
-  'Cr\u00e8te Ouest \u2014 Chania':{x:42,y:88,city:'Chania'},
-  '\u00c9g\u00e9e Sud Est \u2014 Rhodes, Kos':{x:78,y:80,city:'Rhodes'},
-  '\u00c9pire \u2014 Ioannina':{x:28,y:38,city:'Ioannina'},
-  'Thessalie \u2014 Volos, Larissa':{x:50,y:42,city:'Larissa'},
-  'P\u00e9loponn\u00e8se \u2014 Kalamata':{x:44,y:70,city:'Kalamata'},
-  '\u00celes Ioniennes \u2014 Lefkada':{x:22,y:52,city:'Lefkada'},
-  '\u00c9g\u00e9e Sud Ouest \u2014 Santorin':{x:60,y:80,city:'Santorin'},
-  'Mac. Orientale \u2014 Kavala':{x:58,y:24,city:'Kavala'},
-  'Mac. Occidentale \u2014 Kozani':{x:38,y:30,city:'Kozani'},
-  'Gr\u00e8ce Centrale \u2014 Lamia':{x:48,y:48,city:'Lamia'},
-  'P\u00e9loponn\u00e8se Nord \u2014 Patras':{x:34,y:58,city:'Patras'},
-  'Thrace \u2014 Alexandroupoli':{x:68,y:22,city:'Alexandroupoli'},
-  '\u00c9g\u00e9e Nord \u2014 Lesbos':{x:72,y:42,city:'Lesbos'},
-  'Dodecanese \u2014 Kos':{x:74,y:76,city:'Kos'},
-  'Cyclades \u2014 Mykonos':{x:62,y:68,city:'Mykonos'},
-  'Eub\u00e9e \u2014 Chalcis':{x:56,y:52,city:'Chalcis'},
-  'Argolide \u2014 Nauplie':{x:48,y:62,city:'Nauplie'},
-};
+// Keyword-based coordinate matching — matches region names containing these keywords
+const MAP_KEYWORD_COORDS=[
+  {kw:['attique','ath\u00e8nes','athenes'],x:52,y:58,city:'Ath\u00e8nes'},
+  {kw:['mac. centrale','thessalonique'],x:48,y:28,city:'Thessalonique'},
+  {kw:['cr\u00e8te est','heraklion','h\u00e9raklion'],x:52,y:90,city:'H\u00e9raklion'},
+  {kw:['cr\u00e8te ouest','chania'],x:42,y:90,city:'Chania'},
+  {kw:['\u00e9g\u00e9e sud est','egee sud est','rhodes'],x:78,y:80,city:'Rhodes'},
+  {kw:['\u00e9pire','epire','ioannina'],x:28,y:38,city:'Ioannina'},
+  {kw:['thessalie','volos','larissa'],x:50,y:42,city:'Larissa'},
+  {kw:['p\u00e9loponn\u00e8se','peloponnese','kalamata'],x:44,y:70,city:'Kalamata'},
+  {kw:['\u00eeles ioniennes','iles ioniennes','lefkada'],x:22,y:52,city:'Lefkada'},
+  {kw:['\u00e9g\u00e9e sud ouest','egee sud ouest','santorin'],x:60,y:80,city:'Santorin'},
+  {kw:['mac. orientale','kavala'],x:58,y:24,city:'Kavala'},
+  {kw:['mac. occidentale','kozani'],x:38,y:30,city:'Kozani'},
+  {kw:['gr\u00e8ce centrale','grece centrale','lamia'],x:48,y:48,city:'Lamia'},
+  {kw:['patras'],x:34,y:58,city:'Patras'},
+  {kw:['thrace','alexandroupoli'],x:68,y:22,city:'Alexandroupoli'},
+  {kw:['\u00e9g\u00e9e nord','egee nord','lesbos'],x:72,y:42,city:'Lesbos'},
+  {kw:['dodecanese','kos'],x:74,y:76,city:'Kos'},
+  {kw:['cyclades','mykonos'],x:62,y:68,city:'Mykonos'},
+  {kw:['eub\u00e9e','eubee','chalcis'],x:56,y:52,city:'Chalcis'},
+  {kw:['argolide','nauplie'],x:48,y:62,city:'Nauplie'},
+  {kw:['mix'],x:50,y:55,city:'Mix'},
+];
+// Track offsets per base coord to spread overlapping regions
+const _mapPlaced={};
+function getMapCoords(regionName){
+  const rLow=regionName.toLowerCase();
+  for(const entry of MAP_KEYWORD_COORDS){
+    if(entry.kw.some(k=>rLow.includes(k))){
+      const key=entry.x+','+entry.y;
+      if(!_mapPlaced[key])_mapPlaced[key]=0;
+      const offset=_mapPlaced[key];
+      _mapPlaced[key]++;
+      // Spread overlapping points in a small circle
+      const angle=(offset*137.5)*Math.PI/180;
+      const radius=offset===0?0:2.5+offset*1.2;
+      return{x:entry.x+Math.cos(angle)*radius, y:entry.y+Math.sin(angle)*radius, city:entry.city+(offset>0?' '+(offset+1):'')};
+    }
+  }
+  return null;
+}
 let mapZoom=1,mapPanX=0,mapPanY=0,_mapDrag=false,_mapDragX=0,_mapDragY=0;
 function initMapZoom(){
   const ct=document.getElementById('mapZoomArea');
@@ -3156,24 +3176,31 @@ async function renderMap(container){
   const projByRegion={};
   active.forEach((p,i)=>{projByRegion[p.region]={project:p,stats:projStats[i]}});
 
+  // Reset placement tracker
+  Object.keys(_mapPlaced).forEach(k=>delete _mapPlaced[k]);
+
   // Build ALL city points - every region with prospects gets a dot
   let allPointsHtml='';
+  const sizeBadgeColors={PETIT:'#3b82f6',MOYEN:'#f59e0b',GRAND:'#ef4444',G\u00c9ANT:'#a855f7'};
   ALL_REGIONS.forEach(r=>{
-    const coords=MAP_REGION_COORDS[r];
+    const coords=getMapCoords(r);
     if(!coords)return;
     const count=REGION_COUNTS[r]||0;
     if(count===0)return;
+    const badge=getSizeBadge(count);
+    const badgeColor=sizeBadgeColors[badge.label]||'#fff';
     const proj=projByRegion[r];
+    const regionLabel=r.length>30?r.split('\u2014')[0].trim():r;
     if(proj){
       // Active project region = colored marker with pulse
       const s=proj.stats;
       const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
       const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
       const icon=callPct>=75?'\uD83C\uDFF0':callPct>=40?'\uD83C\uDFD8\uFE0F':'\u26FA';
-      allPointsHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(proj.project.name)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label" style="color:${color};font-size:11px;text-shadow:0 0 10px ${color}">${escHtml(coords.city)}</div><div class="marker-pct">${callPct}% \u2022 ${count.toLocaleString()}</div></div>`;
+      allPointsHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(r)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label" style="color:${color};font-size:10px;text-shadow:0 0 10px ${color}">${escHtml(regionLabel)}</div><div class="marker-pct">${callPct}% \u2022 <span style="color:${badgeColor}">${badge.label}</span> ${count.toLocaleString()}</div></div>`;
     } else {
-      // No project = simple white dot with city name
-      allPointsHtml+=`<div class="map-city" style="left:${coords.x}%;top:${coords.y}%"><div class="city-dot"></div><div class="city-name">${escHtml(coords.city)}</div><div class="city-count">${count.toLocaleString()} prospects</div></div>`;
+      // No project = white dot with region name + size badge
+      allPointsHtml+=`<div class="map-city" style="left:${coords.x}%;top:${coords.y}%" title="${escHtml(r)} \u2014 ${count.toLocaleString()} prospects"><div class="city-dot"></div><div class="city-name">${escHtml(regionLabel)}</div><div class="city-count"><span style="color:${badgeColor};font-weight:700">${badge.label}</span> ${count.toLocaleString()}</div></div>`;
     }
   });
 
