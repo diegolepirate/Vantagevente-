@@ -464,8 +464,7 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .map-city.pin-market::before{background-image:url(assets/game-icons/pin-market.png)}
 .map-city.pin-village::before{background-image:url(assets/game-icons/pin-village.png)}
 .map-city.pin-fortress::before{background-image:url(assets/game-icons/pin-fortress.png)}
-.map-city.pin-castle::after,.map-city.pin-market::after,.map-city.pin-village::after,.map-city.pin-fortress::after{content:"";display:block;position:absolute;width:3.5rem;height:1.2rem;left:calc(-50% + var(--city-radius) + .5rem);top:calc(var(--city-radius) + 1.8rem);background:radial-gradient(ellipse,rgba(200,200,200,.35) 0%,transparent 70%);border-radius:50%;animation:pin-smoke 3s ease-in-out infinite;pointer-events:none}
-@keyframes pin-smoke{0%,100%{opacity:.3;transform:scaleX(1)}50%{opacity:.6;transform:scaleX(1.3)}}
+.map-city.pin-castle::after,.map-city.pin-market::after,.map-city.pin-village::after,.map-city.pin-fortress::after{display:none}
 .map-city::after{clip-path:inset(-.5em 0 0 0);content:var(--pin-icon,"\2302");font-size:var(--city-pin-size-font);left:calc(-50% + var(--city-radius));position:absolute;top:calc(-1em + var(--city-radius));text-align:center;transition:all 300ms ease-out;width:100%;z-index:var(--y)}
 .map-city:hover::after{clip-path:inset(-.5em 0 .5em 0);transform:translateY(.5em)}
 .map-city__label{display:none;left:calc(-5em + 50%);position:absolute;text-align:center;width:10em;z-index:999}
