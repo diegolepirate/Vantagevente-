@@ -3154,6 +3154,9 @@ function applyMapTransform(){
   const inner=document.getElementById('mapTransformLayer');
   if(inner)inner.style.transform=`translate(${mapPanX}px,${mapPanY}px) scale(${mapZoom})`;
 }
+function openVillageMap(region,count,badge,color){
+  window.open(`village-map.html?region=${encodeURIComponent(region)}&count=${count}&badge=${badge}&color=${encodeURIComponent(color)}`,'_blank');
+}
 function mapResetZoom(){mapZoom=1;mapPanX=0;mapPanY=0;applyMapTransform()}
 function mapZoomIn(){mapZoom=Math.min(80,mapZoom*1.4);applyMapTransform()}
 function mapZoomOut(){mapZoom=Math.max(1,mapZoom-0.3);applyMapTransform()}
@@ -3193,16 +3196,16 @@ async function renderMap(container){
     const badgeColor=sizeBadgeColors[badge.label]||'#fff';
     const proj=projByRegion[r];
     const regionLabel=r.length>30?r.split('\u2014')[0].trim():r;
+    const isPetit=badge.label==='PETIT';
+    const villageClick=isPetit?`onclick="openVillageMap('${escHtml(r).replace(/'/g,"\\'")}',${count},'${badge.label}','${badgeColor}')"`:proj?`onclick="switchTab('projects')"`:``;
     if(proj){
-      // Active project region = colored marker with pulse
       const s=proj.stats;
       const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
       const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
       const icon=callPct>=75?'\uD83C\uDFF0':callPct>=40?'\uD83C\uDFD8\uFE0F':'\u26FA';
-      allPointsHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" onclick="switchTab('projects')" title="${escHtml(r)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label" style="color:${color};font-size:10px;text-shadow:0 0 10px ${color}">${escHtml(regionLabel)}</div><div class="marker-pct">${callPct}% \u2022 <span style="color:${badgeColor}">${badge.label}</span> ${count.toLocaleString()}</div></div>`;
+      allPointsHtml+=`<div class="map-marker" style="left:${coords.x}%;top:${coords.y}%;--color:${color}" ${villageClick} title="${escHtml(r)} \u2014 ${callPct}%"><div class="marker-pulse"></div><div class="marker-icon">${icon}</div><div class="marker-label" style="color:${color};font-size:10px;text-shadow:0 0 10px ${color}">${escHtml(regionLabel)}</div><div class="marker-pct">${callPct}% \u2022 <span style="color:${badgeColor}">${badge.label}</span> ${count.toLocaleString()}</div></div>`;
     } else {
-      // No project = white dot with region name + size badge
-      allPointsHtml+=`<div class="map-city" style="left:${coords.x}%;top:${coords.y}%" title="${escHtml(r)} \u2014 ${count.toLocaleString()} prospects"><div class="city-dot"></div><div class="city-name">${escHtml(regionLabel)}</div><div class="city-count"><span style="color:${badgeColor};font-weight:700">${badge.label}</span> ${count.toLocaleString()}</div></div>`;
+      allPointsHtml+=`<div class="map-city" style="left:${coords.x}%;top:${coords.y}%;${isPetit?'cursor:pointer':''}" ${villageClick} title="${escHtml(r)} \u2014 ${count.toLocaleString()} prospects"><div class="city-dot"></div><div class="city-name">${escHtml(regionLabel)}</div><div class="city-count"><span style="color:${badgeColor};font-weight:700">${badge.label}</span> ${count.toLocaleString()}</div></div>`;
     }
   });
 
