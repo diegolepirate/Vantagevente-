@@ -470,6 +470,30 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 /* Active project marker - colored sign */
 .map-city.mc-active{--city-sign-color-back:var(--mc-color)}
 .map-city.mc-active::after{filter:drop-shadow(0 0 6px var(--mc-color))}
+/* Region info card popup */
+.region-card-overlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);justify-content:center;align-items:center}
+.region-card-overlay.active{display:flex}
+.region-card{position:relative;width:340px;overflow:hidden;border-radius:16px;background:#3d3c3d;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.region-card-inner{position:relative;z-index:1;border-radius:14px;margin:2px;background:#323132;overflow:hidden;opacity:.95}
+.region-card-bg{position:absolute;inset:0;z-index:0;opacity:.25}
+.region-card-bg img{width:100%;height:100%;object-fit:cover}
+.region-card .rc-glow{position:absolute;width:14rem;height:12rem;background:#fff;filter:blur(50px);left:-50%;top:-50%;z-index:0}
+.region-card-content{position:relative;z-index:2;padding:20px}
+.rc-close{position:absolute;top:10px;right:10px;z-index:3;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rc-close:hover{background:rgba(255,80,80,.3)}
+.rc-title{font-family:'Tanker',sans-serif;font-size:1.3rem;color:#fff;margin-bottom:4px}
+.rc-badge{display:inline-block;padding:2px 10px;border-radius:6px;font-size:.65rem;font-weight:700;margin-bottom:12px}
+.rc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.rc-stat{background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px}
+.rc-stat-val{font-size:1.1rem;font-weight:900;color:#fff}
+.rc-stat-lbl{font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px}
+.rc-families{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
+.rc-fam-title{font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:6px;letter-spacing:.5px}
+.rc-fam-list{display:flex;flex-wrap:wrap;gap:4px}
+.rc-fam-tag{font-size:.6rem;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+.rc-difficulty{margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
+.rc-diff-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:4px;overflow:hidden}
+.rc-diff-fill{height:100%;border-radius:3px;transition:width .4s}
 .map-legend{position:absolute;bottom:12px;right:12px;background:rgba(10,22,40,.85);border:1px solid rgba(52,211,153,.15);border-radius:10px;padding:10px 14px;font-size:.65rem;color:rgba(255,255,255,.7);display:flex;flex-direction:column;gap:4px;z-index:20}
 .client-card-meta{font-size:.68rem;color:var(--gray);margin-bottom:8px}
 .site-status-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
@@ -3166,6 +3190,54 @@ function applyMapTransform(){
   const inner=document.getElementById('mapTransformLayer');
   if(inner)inner.style.transform=`translate(${mapPanX}px,${mapPanY}px) scale(${mapZoom})`;
 }
+async function openRegionCard(region,count,badgeLabel,badgeColor){
+  const overlay=document.getElementById('regionCardOverlay');
+  if(!overlay)return;
+  // Fetch top families in this region
+  const{data:famData}=await sb.from('prospects').select('famille').eq('region',region).limit(500);
+  const famCount={};
+  (famData||[]).forEach(d=>{if(d.famille){famCount[d.famille]=(famCount[d.famille]||0)+1}});
+  const topFams=Object.entries(famCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const topFamHtml=topFams.map(f=>`<span class="rc-fam-tag">${escHtml(f[0])} (${f[1]})</span>`).join('');
+  const majority=topFams.length?topFams[0][0]:'—';
+
+  // Difficulty based on size
+  const diffMap={PETIT:{pct:25,color:'#34d399',label:'Facile'},MOYEN:{pct:50,color:'#fbbf24',label:'Moyen'},GRAND:{pct:75,color:'#f97316',label:'Difficile'},G\u00c9ANT:{pct:95,color:'#ef4444',label:'Tr\u00e8s difficile'}};
+  const diff=diffMap[badgeLabel]||diffMap.PETIT;
+  const isGrand=badgeLabel==='GRAND'||badgeLabel==='G\u00c9ANT';
+
+  overlay.innerHTML=`<div class="region-card">
+    <div class="rc-glow"></div>
+    <div class="region-card-inner">
+      ${isGrand?'<div class="region-card-bg"><img src="assets/game-icons/bg-region-grand.png"></div>':''}
+      <div class="region-card-content">
+        <button class="rc-close" onclick="closeRegionCard()">\u2715</button>
+        <div class="rc-title">${escHtml(region)}</div>
+        <span class="rc-badge" style="background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}55">${badgeLabel}</span>
+        <div class="rc-stats">
+          <div class="rc-stat"><div class="rc-stat-val">${count.toLocaleString()}</div><div class="rc-stat-lbl">Prospects</div></div>
+          <div class="rc-stat"><div class="rc-stat-val">${escHtml(majority)}</div><div class="rc-stat-lbl">Majorit\u00e9</div></div>
+          <div class="rc-stat"><div class="rc-stat-val">${topFams.length}</div><div class="rc-stat-lbl">Familles</div></div>
+          <div class="rc-stat"><div class="rc-stat-val">${diff.label}</div><div class="rc-stat-lbl">Difficult\u00e9</div></div>
+        </div>
+        <div class="rc-difficulty">
+          <div style="font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px">Niveau de difficult\u00e9</div>
+          <div class="rc-diff-bar"><div class="rc-diff-fill" style="width:${diff.pct}%;background:${diff.color}"></div></div>
+        </div>
+        <div class="rc-families">
+          <div class="rc-fam-title">Commerces sur place</div>
+          <div class="rc-fam-list">${topFamHtml||'<span style="color:rgba(255,255,255,.3);font-size:.65rem">Aucune donn\u00e9e</span>'}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  overlay.classList.add('active');
+}
+function closeRegionCard(){
+  const overlay=document.getElementById('regionCardOverlay');
+  if(overlay){overlay.classList.remove('active');overlay.innerHTML=''}
+}
+
 function activateMapFullscreen(e){
   const wrap=document.getElementById('mapCardWrap');
   const overlay=document.getElementById('mapOverlay');
@@ -3221,8 +3293,7 @@ async function renderMap(container){
     const badgeColor=sizeBadgeColors[badge.label]||'#fff';
     const proj=projByRegion[r];
     const regionLabel=r.length>30?r.split('\u2014')[0].trim():r;
-    const isPetit=badge.label==='PETIT';
-    const villageClick=isPetit?`onclick="openVillageMap('${escHtml(r).replace(/'/g,"\\'")}',${count},'${badge.label}','${badgeColor}')"`:proj?`onclick="switchTab('projects')"`:``;
+    const cityClick=`onclick="event.stopPropagation();openRegionCard('${escHtml(r).replace(/'/g,"\\\\'")}',${count},'${badge.label}','${badgeColor}')"`;
     // Pin icon by size: GÉANT=castle, GRAND=fortress, MOYEN=village, PETIT=house
     const sizePin={PETIT:'\uD83C\uDFE0',MOYEN:'\uD83C\uDFD8\uFE0F',GRAND:'\uD83C\uDFF0',G\u00c9ANT:'\uD83C\uDFF0'}[badge.label]||'\uD83C\uDFE0';
     const sizePinCSS={PETIT:'"\\1F3E0"',MOYEN:'"\\1F3D8"',GRAND:'"\\1F3F0"',G\u00c9ANT:'"\\1F3F0"'}[badge.label]||'"\\1F3E0"';
@@ -3232,9 +3303,9 @@ async function renderMap(container){
       const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
       const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
       const projIcon=callPct>=75?'\u2694\uFE0F':callPct>=40?'\u2692\uFE0F':'\u26FA';
-      allPointsHtml+=`<div class="map-city mc-active" style="--x:${coords.x};--y:${coords.y};--mc-color:${color};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${villageClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${projIcon}">${escHtml(regionLabel)} ${callPct}%</div></div></div>`;
+      allPointsHtml+=`<div class="map-city mc-active" style="--x:${coords.x};--y:${coords.y};--mc-color:${color};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${projIcon}">${escHtml(regionLabel)} ${callPct}%</div></div></div>`;
     } else {
-      allPointsHtml+=`<div class="map-city" style="--x:${coords.x};--y:${coords.y};--city-sign-color-back:${badgeColor};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${villageClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${sizePin}"><span style="color:${badgeColor}">${badge.label}</span> ${escHtml(regionLabel)} ${count.toLocaleString()}</div></div></div>`;
+      allPointsHtml+=`<div class="map-city" style="--x:${coords.x};--y:${coords.y};--city-sign-color-back:${badgeColor};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${sizePin}"><span style="color:${badgeColor}">${badge.label}</span> ${escHtml(regionLabel)} ${count.toLocaleString()}</div></div></div>`;
     }
   });
 
@@ -3262,6 +3333,7 @@ async function renderMap(container){
       </div>
     </div>
     </div>
+    <div class="region-card-overlay" id="regionCardOverlay" onclick="if(event.target===this)closeRegionCard()"></div>
     ${!active.length?'<div style="text-align:center;padding:40px;color:var(--gray);font-size:.9rem;margin-top:16px">Cr\u00e9ez un projet pour commencer la conqu\u00eate</div>':''}
   </div>`;
 
