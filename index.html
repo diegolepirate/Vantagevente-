@@ -458,8 +458,11 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .map-container{--city-radius:1.2rem;--city-sign-color-back:#00c080;--city-sign-color-font:#fff;--city-pin-size-font:3.6rem;line-height:1}
 .map-city{border-radius:var(--city-radius);left:calc(var(--x)*1% - var(--city-radius));padding:var(--city-radius);position:absolute;top:calc(var(--y)*1% - var(--city-radius));cursor:pointer}
 .map-city::before{content:"\2022";font-size:var(--city-pin-size-font);left:calc(-50% + var(--city-radius));position:absolute;top:calc(-.65em + var(--city-radius));text-align:center;text-shadow:0 1px 1px #000;width:100%;color:#fff}
-.map-city.pin-market::before,.map-city.pin-castle::before,.map-city.pin-village::before,.map-city.pin-fortress::before{content:"";width:4.5rem;height:4.5rem;left:calc(-50% + var(--city-radius));top:calc(-2.25rem + var(--city-radius));font-size:0;text-shadow:none;background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));transition:transform .4s cubic-bezier(.34,1.56,.64,1);transform-style:preserve-3d}
-.map-city:hover .pin-smoke,.map-city.pin-market:hover::before,.map-city.pin-castle:hover::before,.map-city.pin-village:hover::before,.map-city.pin-fortress:hover::before{transform:scale(1.2) rotateY(15deg) rotateX(-8deg);filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+.map-city.pin-market::before,.map-city.pin-castle::before,.map-city.pin-village::before,.map-city.pin-fortress::before{content:"";width:4.5rem;height:4.5rem;left:calc(-50% + var(--city-radius));top:calc(-2.25rem + var(--city-radius));font-size:0;text-shadow:none;background-size:contain;background-repeat:no-repeat;background-position:center;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));transition:all .4s cubic-bezier(.34,1.56,.64,1);transform-style:preserve-3d;z-index:1}
+.map-city.pin-market:hover::before,.map-city.pin-castle:hover::before,.map-city.pin-village:hover::before,.map-city.pin-fortress:hover::before{transform:scale(2.5) rotateY(12deg) rotateX(-6deg);filter:drop-shadow(0 10px 20px rgba(0,0,0,.5));z-index:9990}
+.map-city:hover{z-index:9999!important}
+.pin-hover-btn{display:none;position:absolute;left:50%;top:calc(var(--city-radius) + 2.5rem);transform:translateX(-50%) skew(-10deg);z-index:9991;white-space:nowrap;padding:6px 18px;background:#644dff;border:2px solid #4836bb;border-radius:.75rem;box-shadow:0 6px 0 #4836bb;color:#fff;font-weight:800;font-size:.7rem;letter-spacing:2px;filter:drop-shadow(0 10px 15px rgba(100,77,255,.4));pointer-events:none;text-align:center;line-height:1.3}
+.map-city:hover .pin-hover-btn{display:block;animation:pin-btn-pop .3s cubic-bezier(.34,1.56,.64,1) forwards}
 .map-city.pin-castle::before{background-image:url(assets/game-icons/pin-castle.png)}
 .map-city.pin-market::before{background-image:url(assets/game-icons/pin-market.png)}
 .map-city.pin-village::before{background-image:url(assets/game-icons/pin-village.png)}
@@ -473,6 +476,7 @@ tr.row-rappeler{background:rgba(188,140,255,.06)!important}tr.row-rappeler td:fi
 .map-city:hover .map-city__label{animation:mc-fadein 300ms forwards ease-out;display:block}
 .map-city:hover .map-city__sign.anim-grow::before{animation:mc-grow 500ms forwards ease-in}
 @keyframes mc-fadein{0%{opacity:0;top:var(--city-radius)}100%{opacity:1;top:calc(var(--city-radius) + var(--city-pin-size-font)/2)}}
+@keyframes pin-btn-pop{0%{opacity:0;transform:translateX(-50%) skew(-10deg) scale(.5)}100%{opacity:1;transform:translateX(-50%) skew(-10deg) scale(1)}}
 @keyframes mc-grow{0%{transform:translate(0,200%)}50%{transform:translate(10%,100%)}100%{transform:translate(0,0)}}
 /* Active project marker - colored sign */
 .map-city.mc-active{--city-sign-color-back:var(--mc-color)}
@@ -3380,9 +3384,9 @@ async function renderMap(container){
       const callPct=s.total>0?Math.min(Math.round(s.called/s.total*100),100):0;
       const color=callPct>=75?'#34d399':callPct>=40?'#fbbf24':'#f87171';
       const projIcon=callPct>=75?'\u2694\uFE0F':callPct>=40?'\u2692\uFE0F':'\u26FA';
-      allPointsHtml+=`<div class="map-city mc-active ${pinClass}" style="--x:${coords.x};--y:${coords.y};--mc-color:${color};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${projIcon}">${escHtml(regionLabel)} ${callPct}%</div></div></div>`;
+      allPointsHtml+=`<div class="map-city mc-active ${pinClass}" style="--x:${coords.x};--y:${coords.y};--mc-color:${color};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="pin-hover-btn">${escHtml(regionLabel)}<br><span style="font-size:.6rem;letter-spacing:1px;opacity:.8">${count} prospects \u2022 ${callPct}%</span></div><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${projIcon}">${escHtml(regionLabel)} ${callPct}%</div></div></div>`;
     } else {
-      allPointsHtml+=`<div class="map-city ${pinClass}" style="--x:${coords.x};--y:${coords.y};--city-sign-color-back:${badgeColor};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${sizePin}"><span style="color:${badgeColor}">${badge.label}</span> ${escHtml(regionLabel)} ${count.toLocaleString()}</div></div></div>`;
+      allPointsHtml+=`<div class="map-city ${pinClass}" style="--x:${coords.x};--y:${coords.y};--city-sign-color-back:${badgeColor};--pin-icon:${sizePinCSS};--city-pin-size-font:${pinScale}rem" ${cityClick}><div class="pin-hover-btn">${escHtml(regionLabel)}<br><span style="font-size:.6rem;letter-spacing:1px;opacity:.8">${count} prospects</span></div><div class="map-city__label"><div class="map-city__sign anim anim-grow" data-icon="${sizePin}"><span style="color:${badgeColor}">${badge.label}</span> ${escHtml(regionLabel)} ${count.toLocaleString()}</div></div></div>`;
     }
   });
 
