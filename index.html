@@ -1003,9 +1003,9 @@ async function enterApp(){
 // ========================================
 // TABS
 // ========================================
-const TABS_VENDOR=['prospects','projects','leaderboard','badges','notes','clients'];
-const TABS_ADMIN=['prospects','projects','leaderboard','badges','notes','clients','vendors','logs','blacklist'];
-const TAB_LABELS={prospects:'Prospects',projects:'Projets',leaderboard:'Classement',badges:'Badges',notes:'Notes',clients:'Clients',vendors:'Vendeurs',logs:'Logs',blacklist:'Blacklist'};
+const TABS_VENDOR=['prospects','projects','leaderboard','badges','notes','clients','map'];
+const TABS_ADMIN=['prospects','projects','leaderboard','badges','notes','clients','map','vendors','logs','blacklist'];
+const TAB_LABELS={prospects:'Prospects',projects:'Projets',leaderboard:'Classement',badges:'Badges',notes:'Notes',clients:'Clients',map:'Map',vendors:'Vendeurs',logs:'Logs',blacklist:'Blacklist'};
 
 function buildTabs(){
   const tabs=isAdmin?TABS_ADMIN:TABS_VENDOR;
@@ -1254,6 +1254,7 @@ async function render(){
     case 'badges': await renderBadges(content); break;
     case 'notes': renderNotes(content); break;
     case 'clients': await renderClients(content); break;
+    case 'map': renderMap(content); break;
     case 'vendors': renderVendors(content); break;
     case 'logs': await renderLogs(content); break;
     case 'blacklist': renderBlacklist(content); break;
@@ -3057,6 +3058,15 @@ function addClientNote(id){
 }
 
 // ========================================
+// 8b. MAP TAB
+// ========================================
+function renderMap(container){
+  container.innerHTML=`<div style="padding:24px">
+    <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:16px">Map</h2>
+    <div style="color:var(--gray);font-size:.85rem">Onglet Map — contenu à venir.</div>
+  </div>`;
+}
+
 // 9. VENDORS TAB (Admin)
 // ========================================
 function renderVendors(container){
